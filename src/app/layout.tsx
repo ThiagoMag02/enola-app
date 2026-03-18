@@ -19,6 +19,7 @@ export const metadata: Metadata = {
 
 import { AuthProvider } from "@/contexts/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 export default function RootLayout({
   children,
@@ -29,12 +30,14 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-slate-950 text-slate-100`}>
         <AuthProvider>
-          <div className="flex h-screen overflow-hidden">
-            <Sidebar />
-            <main className="flex-1 overflow-y-auto bg-slate-950">
-              {children}
-            </main>
-          </div>
+          <ProtectedRoute>
+            <div className="flex h-screen overflow-hidden">
+              <Sidebar />
+              <main className="flex-1 overflow-y-auto bg-slate-950">
+                {children}
+              </main>
+            </div>
+          </ProtectedRoute>
         </AuthProvider>
       </body>
     </html>
