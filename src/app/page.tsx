@@ -1,65 +1,75 @@
-import Image from "next/image";
+'use client';
+
+import { useAuth } from "@/contexts/AuthContext";
+import { entityService } from "@/services/entityService";
+import { budgetService } from "@/services/budgetService";
+import { purchaseOrderService } from "@/services/purchaseOrderService";
+import { useEffect, useState } from "react";
+import { FileText } from 'lucide-react';
 
 export default function Home() {
+  const { user } = useAuth();
+  const [entitiesCount, setEntitiesCount] = useState<number | null>(null);
+  const [budgetsCount, setBudgetsCount] = useState<number | null>(null);
+  const [posCount, setPosCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    // En modo demo o si hay usuario, cargamos los datos
+    entityService.getAll().then((data) => setEntitiesCount(data.length)).catch(() => {});
+    budgetService.getAll().then((data: any) => setBudgetsCount(data.length)).catch(() => {});
+    purchaseOrderService.getAll().then((data: any) => setPosCount(data.length)).catch(() => {});
+  }, [user]);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="p-8 space-y-8">
+      <header className="flex justify-between items-center bg-slate-900/50 p-6 rounded-2xl border border-slate-800">
+        <div>
+          <h2 className="text-3xl font-extrabold text-white">Dashboard Overview</h2>
+          <p className="text-slate-400 mt-1">Resumen general de las operaciones de ENOLA.</p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </header>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800 hover:border-blue-500/50 transition-all duration-300 shadow-xl shadow-blue-500/5 group cursor-default">
+          <h3 className="text-slate-500 text-xs font-bold uppercase tracking-widest group-hover:text-blue-400 transition-colors">Entidades Activas</h3>
+          <p className="text-5xl font-black mt-2 tabular-nums">{entitiesCount ?? '--'}</p>
         </div>
-      </main>
+        <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800 hover:border-emerald-500/50 transition-all duration-300 shadow-xl shadow-emerald-500/5 group cursor-default">
+          <h3 className="text-slate-500 text-xs font-bold uppercase tracking-widest group-hover:text-emerald-400 transition-colors">Presupuestos</h3>
+          <p className="text-5xl font-black mt-2 tabular-nums">{budgetsCount ?? '--'}</p>
+        </div>
+        <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800 hover:border-purple-500/50 transition-all duration-300 shadow-xl shadow-purple-500/5 group cursor-default">
+          <h3 className="text-slate-500 text-xs font-bold uppercase tracking-widest group-hover:text-purple-400 transition-colors">Órdenes de Compra</h3>
+          <p className="text-5xl font-black mt-2 tabular-nums">{posCount ?? '--'}</p>
+        </div>
+      </div>
+
+      <div className="bg-blue-600/5 border border-blue-600/20 p-8 rounded-3xl relative overflow-hidden group">
+        <div className="absolute top-0 right-0 p-8 text-blue-600/10 group-hover:text-blue-600/20 transition-colors">
+          <FileText size={160} className="-rotate-12 translate-x-1/4 -translate-y-1/4" />
+        </div>
+        
+        <div className="relative z-10">
+          <h2 className="text-2xl font-bold text-blue-400 mb-4 flex items-center gap-2">
+            Próximos pasos de la migración
+          </h2>
+          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-slate-300">
+            {[
+              "Crear proyecto en Supabase",
+              "Ejecutar el esquema SQL",
+              "Configurar las variables de entorno",
+              "Conectar el repositorio a Vercel"
+            ].map((step, idx) => (
+              <li key={idx} className="flex items-center gap-3 bg-slate-950/40 p-3 rounded-xl border border-blue-500/10">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600/20 text-blue-400 flex items-center justify-center text-xs font-bold">
+                  {idx + 1}
+                </span>
+                {step}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
     </div>
   );
 }
