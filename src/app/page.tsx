@@ -43,33 +43,6 @@ export default function Home() {
           <p className="text-5xl font-black mt-2 tabular-nums">{posCount ?? '--'}</p>
         </div>
       </div>
-
-      <div className="bg-blue-600/5 border border-blue-600/20 p-8 rounded-3xl relative overflow-hidden group">
-        <div className="absolute top-0 right-0 p-8 text-blue-600/10 group-hover:text-blue-600/20 transition-colors">
-          <FileText size={160} className="-rotate-12 translate-x-1/4 -translate-y-1/4" />
-        </div>
-        
-        <div className="relative z-10">
-          <h2 className="text-2xl font-bold text-blue-400 mb-4 flex items-center gap-2">
-            Próximos pasos de la migración
-          </h2>
-          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-slate-300">
-            {[
-              "Crear proyecto en Supabase",
-              "Ejecutar el esquema SQL",
-              "Configurar las variables de entorno",
-              "Conectar el repositorio a Vercel"
-            ].map((step, idx) => (
-              <li key={idx} className="flex items-center gap-3 bg-slate-950/40 p-3 rounded-xl border border-blue-500/10">
-                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600/20 text-blue-400 flex items-center justify-center text-xs font-bold">
-                  {idx + 1}
-                </span>
-                {step}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
     </div>
   );
 }
