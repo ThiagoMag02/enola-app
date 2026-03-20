@@ -32,15 +32,15 @@ export default function Home() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800 hover:border-blue-500/50 transition-all duration-300 shadow-xl shadow-blue-500/5 group cursor-default">
           <h3 className="text-slate-500 text-xs font-bold uppercase tracking-widest group-hover:text-blue-400 transition-colors">Entidades Activas</h3>
-          <p className="text-5xl font-black mt-2 tabular-nums">{entitiesCount ?? '--'}</p>
+          <p className="text-5xl font-black mt-2 tabular-nums text-white">{entitiesCount ?? '--'}</p>
         </div>
         <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800 hover:border-emerald-500/50 transition-all duration-300 shadow-xl shadow-emerald-500/5 group cursor-default">
           <h3 className="text-slate-500 text-xs font-bold uppercase tracking-widest group-hover:text-emerald-400 transition-colors">Presupuestos</h3>
-          <p className="text-5xl font-black mt-2 tabular-nums">{budgetsCount ?? '--'}</p>
+          <p className="text-5xl font-black mt-2 tabular-nums text-white">{budgetsCount ?? '--'}</p>
         </div>
         <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800 hover:border-purple-500/50 transition-all duration-300 shadow-xl shadow-purple-500/5 group cursor-default">
           <h3 className="text-slate-500 text-xs font-bold uppercase tracking-widest group-hover:text-purple-400 transition-colors">Órdenes de Compra</h3>
-          <p className="text-5xl font-black mt-2 tabular-nums">{posCount ?? '--'}</p>
+          <p className="text-5xl font-black mt-2 tabular-nums text-white">{posCount ?? '--'}</p>
         </div>
       </div>
     </div>
