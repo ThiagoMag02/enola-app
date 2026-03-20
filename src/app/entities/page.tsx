@@ -2,26 +2,49 @@
 
 import { useEffect, useState } from 'react';
 import { entityService, Entity } from '@/services/entityService';
+import { Modal } from '@/components/ui/Modal';
+import { EntityForm } from '@/components/forms/EntityForm';
+import { ActionsMenu } from '@/components/ui/ActionsMenu';
 import { 
   Users, 
   Search, 
   Plus, 
-  ExternalLink, 
   MoreVertical,
   Mail,
   Phone,
-  Building2
+  Building2,
+  Pencil
 } from 'lucide-react';
 
 export default function EntitiesPage() {
   const [entities, setEntities] = useState<Entity[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingEntity, setEditingEntity] = useState<Entity | null>(null);
 
-  useEffect(() => {
+  const loadEntities = () => {
+    setLoading(true);
     entityService.getAll()
       .then(setEntities)
       .finally(() => setLoading(false));
+  };
+
+  const handleDelete = async (id: string) => {
+    console.log("EntitiesPage: handleDelete called with ID =", id);
+    try {
+      console.log("EntitiesPage: Calling entityService.delete...");
+      const success = await entityService.delete(id);
+      console.log("EntitiesPage: entityService.delete returned:", success);
+      loadEntities();
+    } catch (err: any) {
+      console.error('EntitiesPage: Error deleting entity:', err, err.message);
+      alert('No se pudo eliminar la entidad: ' + err.message);
+    }
+  };
+
+  useEffect(() => {
+    loadEntities();
   }, []);
 
   const filteredEntities = entities.filter(e => 
@@ -38,7 +61,13 @@ export default function EntitiesPage() {
           </h2>
           <p className="text-slate-400 mt-1">Gestión de Clientes y Proveedores del sistema.</p>
         </div>
-        <button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl font-bold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-blue-600/20">
+        <button 
+          onClick={() => {
+            setEditingEntity(null);
+            setIsModalOpen(true);
+          }}
+          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl font-bold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-blue-600/20"
+        >
           <Plus size={20} /> Nueva Entidad
         </button>
       </header>
@@ -56,8 +85,8 @@ export default function EntitiesPage() {
         />
       </div>
 
-      <div className="bg-slate-900/40 rounded-3xl border border-slate-800 overflow-hidden shadow-2xl">
-        <div className="overflow-x-auto">
+      <div className="bg-slate-900/40 rounded-3xl border border-slate-800 shadow-2xl relative min-h-[300px]">
+        <div className="overflow-visible">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-800/50 text-slate-400 text-xs uppercase tracking-widest font-bold">
@@ -123,9 +152,15 @@ export default function EntitiesPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button className="p-2 text-slate-500 hover:text-white hover:bg-slate-700 rounded-lg transition-all">
-                        <MoreVertical size={18} />
-                      </button>
+                      <div className="flex justify-end gap-2">
+                        <ActionsMenu 
+                          onEdit={() => {
+                            setEditingEntity(entity);
+                            setIsModalOpen(true);
+                          }}
+                          onDelete={() => handleDelete(entity.id)}
+                        />
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -141,6 +176,29 @@ export default function EntitiesPage() {
           </table>
         </div>
       </div>
+
+      <Modal 
+        isOpen={isModalOpen} 
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingEntity(null);
+        }} 
+        title={editingEntity ? "Editar Entidad" : "Crear Nueva Entidad"}
+      >
+        <EntityForm 
+          initialData={editingEntity}
+          onSuccess={() => {
+            setIsModalOpen(false);
+            setEditingEntity(null);
+            loadEntities();
+          }} 
+          onCancel={() => {
+            setIsModalOpen(false);
+            setEditingEntity(null);
+          }} 
+        />
+      </Modal>
     </div>
   );
 }
+

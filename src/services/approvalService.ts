@@ -10,11 +10,8 @@ export interface Approval {
   created_at: string;
 }
 
-const isMockMode = !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('localhost');
-
 export const approvalService = {
-  async approveBudget(budgetId: string, fileNumber?: string) {
-    if (isMockMode) return { id: 'mock-app-' + budgetId, approval_date: new Date().toISOString() };
+  async approveBudget(budgetId: string, fileNumber?: string): Promise<Approval> {
     const { data: newApproval, error: appError } = await supabase
       .from('approvals')
       .insert([{
@@ -25,29 +22,24 @@ export const approvalService = {
       }])
       .select()
       .single();
-    
     if (appError) throw appError;
 
-    // Update budget status (matching C# service)
+    // Actualiza el presupuesto asociado a Approved
     await supabase
       .from('budgets')
-      .update({ 
-        status: 'Approved', 
-        updated_at: new Date().toISOString() 
-      })
+      .update({ status: 'Approved', updated_at: new Date().toISOString() })
       .eq('id', budgetId);
 
-    return newApproval;
+    return newApproval as Approval;
   },
 
-  async getByBudget(budgetId: string) {
+  async getByBudget(budgetId: string): Promise<Approval> {
     const { data, error } = await supabase
       .from('approvals')
       .select('*')
       .eq('budget_id', budgetId)
       .single();
-    
     if (error) throw error;
-    return data;
+    return data as Approval;
   }
 };

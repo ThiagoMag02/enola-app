@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { budgetService, Budget } from '@/services/budgetService';
+import { Modal } from '@/components/ui/Modal';
+import { BudgetForm } from '@/components/forms/BudgetForm';
+import { ActionsMenu } from '@/components/ui/ActionsMenu';
 import { 
   Receipt, 
   Search, 
@@ -17,11 +20,28 @@ export default function BudgetsPage() {
   const [budgets, setBudgets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingBudget, setEditingBudget] = useState<any | null>(null);
 
-  useEffect(() => {
+  const loadBudgets = () => {
+    setLoading(true);
     budgetService.getAll()
       .then(setBudgets)
       .finally(() => setLoading(false));
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await budgetService.delete(id);
+      loadBudgets();
+    } catch (err) {
+      console.error('Error deleting budget:', err);
+      alert('No se pudo eliminar el presupuesto.');
+    }
+  };
+
+  useEffect(() => {
+    loadBudgets();
   }, []);
 
   const filteredBudgets = budgets.filter(b => 
@@ -38,7 +58,13 @@ export default function BudgetsPage() {
           </h2>
           <p className="text-slate-400 mt-1">Control y seguimiento de presupuestos asignados.</p>
         </div>
-        <button className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-bold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-emerald-600/20">
+        <button 
+          onClick={() => {
+            setEditingBudget(null);
+            setIsModalOpen(true);
+          }}
+          className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-bold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-emerald-600/20"
+        >
           <Plus size={20} /> Nuevo Presupuesto
         </button>
       </header>
@@ -63,7 +89,7 @@ export default function BudgetsPage() {
              ))
         ) : filteredBudgets.length > 0 ? (
           filteredBudgets.map((budget) => (
-            <div key={budget.id} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 hover:border-emerald-500/50 transition-all group relative overflow-hidden shadow-2xl">
+            <div key={budget.id} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 hover:border-emerald-500/50 transition-all group relative shadow-2xl">
               {/* Badge Estado */}
               <div className="absolute top-6 right-6">
                 <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
@@ -73,6 +99,16 @@ export default function BudgetsPage() {
                 }`}>
                   {budget.status === 'Approved' ? 'Aprobado' : budget.status === 'Draft' ? 'Borrador' : budget.status}
                 </span>
+              </div>
+
+              <div className="absolute bottom-6 right-6">
+                <ActionsMenu 
+                  onEdit={() => {
+                    setEditingBudget(budget);
+                    setIsModalOpen(true);
+                  }}
+                  onDelete={() => handleDelete(budget.id)}
+                />
               </div>
 
               <div className="flex items-center gap-4 mb-6">
@@ -116,6 +152,28 @@ export default function BudgetsPage() {
           </div>
         )}
       </div>
+
+      <Modal 
+        isOpen={isModalOpen} 
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingBudget(null);
+        }} 
+        title={editingBudget ? "Editar Presupuesto" : "Generar Nuevo Presupuesto"}
+      >
+        <BudgetForm 
+          initialData={editingBudget}
+          onSuccess={() => {
+            setIsModalOpen(false);
+            setEditingBudget(null);
+            loadBudgets();
+          }} 
+          onCancel={() => {
+            setIsModalOpen(false);
+            setEditingBudget(null);
+          }} 
+        />
+      </Modal>
     </div>
   );
 }

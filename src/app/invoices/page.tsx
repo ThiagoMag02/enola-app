@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { invoiceService } from '@/services/invoiceService';
+import { Modal } from '@/components/ui/Modal';
+import { InvoiceForm } from '@/components/forms/InvoiceForm';
+import { ActionsMenu } from '@/components/ui/ActionsMenu';
 import { 
   FileText, 
   Search, 
@@ -16,11 +19,28 @@ import {
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingInvoice, setEditingInvoice] = useState<any | null>(null);
 
-  useEffect(() => {
+  const loadInvoices = () => {
+    setLoading(true);
     invoiceService.getAll()
       .then(setInvoices)
       .finally(() => setLoading(false));
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await invoiceService.delete(id);
+      loadInvoices();
+    } catch (err) {
+      console.error('Error deleting invoice:', err);
+      alert('No se pudo eliminar la factura.');
+    }
+  };
+
+  useEffect(() => {
+    loadInvoices();
   }, []);
 
   return (
@@ -32,7 +52,13 @@ export default function InvoicesPage() {
           </h2>
           <p className="text-indigo-200/60 mt-1 uppercase tracking-tighter font-bold text-xs">Gestión y control de cobros y pagos.</p>
         </div>
-        <button className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl font-bold transition-all hover:scale-105 shadow-lg shadow-indigo-600/20">
+        <button 
+          onClick={() => {
+            setEditingInvoice(null);
+            setIsModalOpen(true);
+          }}
+          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl font-bold transition-all hover:scale-105 shadow-lg shadow-indigo-600/20"
+        >
           <Plus size={20} /> Registrar Factura
         </button>
       </header>
@@ -54,7 +80,7 @@ export default function InvoicesPage() {
         </div>
       </div>
 
-      <div className="bg-slate-900/40 rounded-3xl border border-slate-800 overflow-hidden shadow-2xl">
+      <div className="bg-slate-900/40 rounded-3xl border border-slate-800 shadow-2xl relative min-h-[300px] overflow-visible">
         <table className="w-full text-left">
           <thead className="bg-slate-800/80 text-slate-400 text-xs uppercase tracking-widest font-black">
             <tr>
@@ -93,9 +119,18 @@ export default function InvoicesPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button className="bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white p-2 rounded-xl transition-all">
-                      <CreditCard size={18} />
-                    </button>
+                    <div className="flex justify-end gap-2">
+                      <button className="bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white p-2 rounded-xl transition-all">
+                        <CreditCard size={18} />
+                      </button>
+                      <ActionsMenu 
+                        onEdit={() => {
+                          setEditingInvoice(inv);
+                          setIsModalOpen(true);
+                        }}
+                        onDelete={() => handleDelete(inv.id)}
+                      />
+                    </div>
                   </td>
                 </tr>
               ))
@@ -105,6 +140,28 @@ export default function InvoicesPage() {
           </tbody>
         </table>
       </div>
+
+      <Modal 
+        isOpen={isModalOpen} 
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingInvoice(null);
+        }} 
+        title={editingInvoice ? "Editar Factura" : "Registrar Nueva Factura"}
+      >
+        <InvoiceForm 
+          initialData={editingInvoice}
+          onSuccess={() => {
+            setIsModalOpen(false);
+            setEditingInvoice(null);
+            loadInvoices();
+          }} 
+          onCancel={() => {
+            setIsModalOpen(false);
+            setEditingInvoice(null);
+          }} 
+        />
+      </Modal>
     </div>
   );
 }

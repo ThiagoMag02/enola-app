@@ -8,48 +8,56 @@ export interface Tender {
   tender_date: string;
   file_number?: string;
   created_at: string;
+  budget?: any;
 }
-
-const isMockMode = !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('localhost');
-
-const mockTenders: any[] = [
-  { id: '1', tender_number: 'LIC-001', offer_amount: 14500, tender_date: new Date().toISOString(), budget: { custom_id: 'B-001' } },
-];
 
 export const tenderService = {
   async getAll() {
-    if (isMockMode) return mockTenders;
     const { data, error } = await supabase
       .from('tenders')
-      .select('*, budget:budgets(*)')
+      .select(`*, budget:budgets(*)`)
       .order('tender_date', { ascending: false });
-    
     if (error) throw error;
     return data;
   },
 
-  async getByBudget(budgetId: string) {
+  async getById(id: string) {
     const { data, error } = await supabase
       .from('tenders')
-      .select('*, budget:budgets(*)')
-      .eq('budget_id', budgetId)
+      .select(`*, budget:budgets(*)`)
+      .eq('id', id)
       .single();
-    
     if (error) throw error;
     return data;
   },
 
-  async create(tender: Omit<Tender, 'id' | 'created_at' | 'tender_date'>) {
+  async create(tender: { budget_id: string; tender_number: string; offer_amount: number; file_number?: string }) {
     const { data, error } = await supabase
       .from('tenders')
-      .insert([{
-        ...tender,
-        tender_date: new Date().toISOString()
-      }])
+      .insert([{ ...tender, tender_date: new Date().toISOString() }])
       .select()
       .single();
-    
     if (error) throw error;
     return data;
+  },
+
+  async update(id: string, tender: Partial<Tender>) {
+    const { data, error } = await supabase
+      .from('tenders')
+      .update(tender)
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  async delete(id: string): Promise<boolean> {
+    const { error } = await supabase
+      .from('tenders')
+      .delete()
+      .eq('id', id);
+    if (error) throw error;
+    return true;
   }
 };

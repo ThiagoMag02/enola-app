@@ -9,42 +9,43 @@ export interface Payment {
   created_at: string;
 }
 
-const isMockMode = !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('localhost');
-
-const mockPayments: any[] = [
-  { id: '1', invoice_id: 'FAC-002', amount: 15000, date: new Date().toISOString(), method: 'Transferencia Bancaria' },
-];
-
 export const paymentService = {
   async getAll() {
-    if (isMockMode) return mockPayments;
     const { data, error } = await supabase
       .from('payments')
-      .select('*, invoice:invoices(*)')
+      .select('*')
       .order('date', { ascending: false });
-    
     if (error) throw error;
     return data;
   },
 
-  async create(payment: Omit<Payment, 'id' | 'created_at' | 'date'>) {
-    const { data: newPayment, error: payError } = await supabase
+  async create(payment: { invoice_id: string; amount: number; method?: string }) {
+    const { data, error } = await supabase
       .from('payments')
-      .insert([{
-        ...payment,
-        date: new Date().toISOString()
-      }])
+      .insert([{ ...payment, date: new Date().toISOString(), method: payment.method || 'Transfer' }])
       .select()
       .single();
-    
-    if (payError) throw payError;
+    if (error) throw error;
+    return data;
+  },
 
-    // Update Invoice status (matching C# service)
-    await supabase
-      .from('invoices')
-      .update({ status: 'Paid' })
-      .eq('id', payment.invoice_id);
+  async update(id: string, payment: Partial<Payment>) {
+    const { data, error } = await supabase
+      .from('payments')
+      .update(payment)
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
 
-    return newPayment;
+  async delete(id: string): Promise<boolean> {
+    const { error } = await supabase
+      .from('payments')
+      .delete()
+      .eq('id', id);
+    if (error) throw error;
+    return true;
   }
 };

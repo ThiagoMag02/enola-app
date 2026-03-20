@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { purchaseOrderService } from '@/services/purchaseOrderService';
+import { Modal } from '@/components/ui/Modal';
+import { PurchaseOrderForm } from '@/components/forms/PurchaseOrderForm';
+import { ActionsMenu } from '@/components/ui/ActionsMenu';
 import { 
   ShoppingCart, 
   Search, 
@@ -16,11 +19,28 @@ import {
 export default function PurchaseOrdersPage() {
   const [pos, setPos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingPO, setEditingPO] = useState<any | null>(null);
 
-  useEffect(() => {
+  const loadPOs = () => {
+    setLoading(true);
     purchaseOrderService.getAll()
       .then(setPos)
       .finally(() => setLoading(false));
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await purchaseOrderService.delete(id);
+      loadPOs();
+    } catch (err) {
+      console.error('Error deleting PO:', err);
+      alert('No se pudo eliminar la orden de compra.');
+    }
+  };
+
+  useEffect(() => {
+    loadPOs();
   }, []);
 
   return (
@@ -32,12 +52,18 @@ export default function PurchaseOrdersPage() {
           </h2>
           <p className="text-slate-400 mt-1">Seguimiento de compras y estados de facturación.</p>
         </div>
-        <button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl font-bold transition-all hover:scale-105 shadow-lg shadow-blue-600/20">
+        <button 
+          onClick={() => {
+            setEditingPO(null);
+            setIsModalOpen(true);
+          }}
+          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl font-bold transition-all hover:scale-105 shadow-lg shadow-blue-600/20"
+        >
           <Plus size={20} /> Nueva OC
         </button>
       </header>
 
-      <div className="bg-slate-900/40 rounded-3xl border border-slate-800 overflow-hidden shadow-2xl">
+      <div className="bg-slate-900/40 rounded-3xl border border-slate-800 shadow-2xl relative min-h-[300px] overflow-visible">
         <table className="w-full text-left">
           <thead className="bg-slate-800/50 text-slate-400 text-xs uppercase tracking-widest font-black">
             <tr>
@@ -83,9 +109,13 @@ export default function PurchaseOrdersPage() {
                     </div>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button className="p-2 text-slate-500 hover:text-white hover:bg-slate-700 rounded-lg">
-                      <MoreVertical size={18} />
-                    </button>
+                    <ActionsMenu 
+                      onEdit={() => {
+                        setEditingPO(po);
+                        setIsModalOpen(true);
+                      }}
+                      onDelete={() => handleDelete(po.id)}
+                    />
                   </td>
                 </tr>
               ))
@@ -95,6 +125,28 @@ export default function PurchaseOrdersPage() {
           </tbody>
         </table>
       </div>
+
+      <Modal 
+        isOpen={isModalOpen} 
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingPO(null);
+        }} 
+        title={editingPO ? "Editar Orden de Compra" : "Generar Nueva Orden de Compra"}
+      >
+        <PurchaseOrderForm 
+          initialData={editingPO}
+          onSuccess={() => {
+            setIsModalOpen(false);
+            setEditingPO(null);
+            loadPOs();
+          }} 
+          onCancel={() => {
+            setIsModalOpen(false);
+            setEditingPO(null);
+          }} 
+        />
+      </Modal>
     </div>
   );
 }

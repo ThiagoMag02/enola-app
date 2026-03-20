@@ -10,22 +10,16 @@ export interface Budget {
   provider_id?: string;
   rubro: string;
   amount: number;
-  description: string;
+  description?: string;
   status: BudgetStatus;
   created_at: string;
   updated_at?: string;
+  entity?: any;
+  provider?: any;
 }
-
-const isMockMode = !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('localhost');
-
-const mockBudgets: any[] = [
-  { id: '1', custom_id: 'B-001', rubro: 'Software', amount: 15000, status: 'Approved', date: new Date().toISOString() },
-  { id: '2', custom_id: 'B-002', rubro: 'Hardware', amount: 5000, status: 'Draft', date: new Date().toISOString() },
-];
 
 export const budgetService = {
   async getAll() {
-    if (isMockMode) return mockBudgets;
     const { data, error } = await supabase
       .from('budgets')
       .select(`
@@ -34,7 +28,6 @@ export const budgetService = {
         provider:entities!provider_id(*)
       `)
       .order('date', { ascending: false });
-    
     if (error) throw error;
     return data;
   },
@@ -49,22 +42,16 @@ export const budgetService = {
       `)
       .eq('id', id)
       .single();
-    
     if (error) throw error;
     return data;
   },
 
-  async create(budget: Omit<Budget, 'id' | 'created_at' | 'updated_at'>) {
+  async create(budget: Omit<Budget, 'id' | 'created_at' | 'updated_at' | 'entity' | 'provider'>) {
     const { data, error } = await supabase
       .from('budgets')
-      .insert([{
-        ...budget,
-        date: new Date().toISOString(),
-        status: 'Draft'
-      }])
+      .insert([{ ...budget, date: new Date().toISOString(), status: 'Draft' }])
       .select()
       .single();
-    
     if (error) throw error;
     return data;
   },
@@ -72,14 +59,10 @@ export const budgetService = {
   async update(id: string, budget: Partial<Budget>) {
     const { data, error } = await supabase
       .from('budgets')
-      .update({ 
-        ...budget, 
-        updated_at: new Date().toISOString() 
-      })
+      .update({ ...budget, updated_at: new Date().toISOString() })
       .eq('id', id)
       .select()
       .single();
-    
     if (error) throw error;
     return data;
   },
@@ -87,15 +70,34 @@ export const budgetService = {
   async updateStatus(id: string, status: BudgetStatus) {
     const { data, error } = await supabase
       .from('budgets')
-      .update({ 
-        status, 
-        updated_at: new Date().toISOString() 
-      })
+      .update({ status, updated_at: new Date().toISOString() })
       .eq('id', id)
       .select()
       .single();
-    
     if (error) throw error;
     return data;
+  },
+
+  async delete(id: string): Promise<boolean> {
+    console.log(`budgetService: attempting to DELETE budget with ID ${id}`);
+    const { error, data, count } = await supabase
+      .from('budgets')
+      .delete()
+      .eq('id', id)
+      .select();
+    
+    console.log(`budgetService DELETE response:`, { error, data, count });
+    
+    if (error) {
+      console.error(`budgetService DELETE error:`, error);
+      throw error;
+    }
+    
+    if (!data || data.length === 0) {
+      console.warn(`budgetService DELETE warning: 0 rows affected. Posible falta de permisos (RLS) o el registro ya no existe.`);
+      throw new Error("No se pudo eliminar el registro en la base de datos (Posible bloqueo por permisos RLS).");
+    }
+    
+    return true;
   }
 };

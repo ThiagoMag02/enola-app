@@ -11,17 +11,12 @@ export interface PurchaseOrder {
   date: string;
   status: PurchaseOrderStatus;
   created_at: string;
+  tender?: any;
+  approval?: any;
 }
-
-const isMockMode = !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('localhost');
-
-const mockPOs: any[] = [
-  { id: '1', po_number: 'PO-2026-001', amount: 15000, status: 'Pending', date: new Date().toISOString() },
-];
 
 export const purchaseOrderService = {
   async getAll() {
-    if (isMockMode) return mockPOs;
     const { data, error } = await supabase
       .from('purchase_orders')
       .select(`
@@ -30,7 +25,6 @@ export const purchaseOrderService = {
         approval:approvals(*)
       `)
       .order('date', { ascending: false });
-    
     if (error) throw error;
     return data;
   },
@@ -45,23 +39,42 @@ export const purchaseOrderService = {
       `)
       .eq('id', id)
       .single();
-    
     if (error) throw error;
     return data;
   },
 
-  async create(po: Omit<PurchaseOrder, 'id' | 'created_at' | 'status' | 'date'>) {
+  async create(po: { budget_id?: string; provider_id?: string; po_number: string; amount: number; description?: string }) {
     const { data, error } = await supabase
       .from('purchase_orders')
       .insert([{
-        ...po,
+        po_number: po.po_number,
+        amount: po.amount,
         date: new Date().toISOString(),
         status: 'Pending'
       }])
       .select()
       .single();
-    
     if (error) throw error;
     return data;
+  },
+
+  async update(id: string, po: Partial<PurchaseOrder>) {
+    const { data, error } = await supabase
+      .from('purchase_orders')
+      .update({ ...po, status: po.status || 'Pending' })
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  async delete(id: string): Promise<boolean> {
+    const { error } = await supabase
+      .from('purchase_orders')
+      .delete()
+      .eq('id', id);
+    if (error) throw error;
+    return true;
   }
 };
