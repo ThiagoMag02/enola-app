@@ -14,10 +14,10 @@ export default function Home() {
   const [posCount, setPosCount] = useState<number | null>(null);
 
   useEffect(() => {
-    // En modo demo o si hay usuario, cargamos los datos
-    entityService.getAll().then((data) => setEntitiesCount(data.length)).catch(() => {});
-    budgetService.getAll().then((data: any) => setBudgetsCount(data.length)).catch(() => {});
-    purchaseOrderService.getAll().then((data: any) => setPosCount(data.length)).catch(() => {});
+    // Aseguramos de que solo cargue si hay datos válidos retornados por Supabase y evitando errores de null.length
+    entityService.getAll().then((data) => setEntitiesCount(data?.length || 0)).catch(e => console.error("Error Home entities:", e));
+    budgetService.getAll().then((data: any) => setBudgetsCount(data?.length || 0)).catch(e => console.error("Error Home budgets:", e));
+    purchaseOrderService.getAll().then((data: any) => setPosCount(data?.length || 0)).catch(e => console.error("Error Home pos:", e));
   }, [user]);
 
   return (
