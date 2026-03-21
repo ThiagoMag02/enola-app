@@ -11,16 +11,39 @@ interface BudgetFormProps {
   onCancel: () => void;
 }
 
+const INTERNAL_COMPANIES = [
+  "SUSTENTO SA", "GREEN GO SRL", "SUR FERRETERO", "MAXVIAL", 
+  "NEXXUM", "INDUMETAL", "MARLESA", "DUAL VIAL SA"
+];
+
+const RUBROS = [
+  "Indumentaria", "Obras y Servicios", "Electricidad", "Equipos Alquiler", 
+  "Forestación", "Pintura vial", "Farmacia", "Ferreteria"
+];
+
 export const BudgetForm = ({ initialData, onSuccess, onCancel }: BudgetFormProps) => {
   const [loading, setLoading] = useState(false);
   const [entities, setEntities] = useState<Entity[]>([]);
+
+  // Extraer la empresa interna de la descripción si existe
+  let initialInternalCompany = '';
+  let initialDesc = initialData?.description || '';
+  if (initialDesc.startsWith('[EMPRESA: ')) {
+    const parts = initialDesc.split(']\n\n');
+    if (parts.length > 1) {
+      initialInternalCompany = parts[0].replace('[EMPRESA: ', '');
+      initialDesc = parts.slice(1).join(']\n\n');
+    }
+  }
+
   const [formData, setFormData] = useState({
     custom_id: initialData?.custom_id || '',
     entity_id: initialData?.entity_id || '',
+    internal_company: initialInternalCompany,
     provider_id: initialData?.provider_id || '',
     rubro: initialData?.rubro || '',
     amount: initialData?.amount || 0,
-    description: initialData?.description || '',
+    description: initialDesc,
     status: (initialData?.status as BudgetStatus) || 'Draft',
   });
 
@@ -34,12 +57,19 @@ export const BudgetForm = ({ initialData, onSuccess, onCancel }: BudgetFormProps
     
     setLoading(true);
     try {
+      const finalDescription = formData.internal_company 
+        ? `[EMPRESA: ${formData.internal_company}]\n\n${formData.description}`
+        : formData.description;
+
       // Limpiamos campos opcionales para evitar errores de tipo UUID en Supabase
       const cleanData = {
-        ...formData,
-        provider_id: formData.provider_id || null,
         custom_id: formData.custom_id || null,
-        description: formData.description || null,
+        entity_id: formData.entity_id,
+        provider_id: formData.provider_id || null,
+        rubro: formData.rubro,
+        amount: formData.amount,
+        status: formData.status,
+        description: finalDescription || null,
       };
 
       if (initialData?.id) {
@@ -76,8 +106,28 @@ export const BudgetForm = ({ initialData, onSuccess, onCancel }: BudgetFormProps
           </div>
         </div>
 
+        {/* Empresa Interna */}
         <div className="md:col-span-1">
-          <label className={labelClass}>Entidad Solicitante</label>
+          <label className={labelClass}>Empresa del Grupo</label>
+          <div className="relative">
+            <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-500" size={18} />
+            <select
+              required
+              className="w-full bg-slate-950/50 border border-emerald-500/30 rounded-2xl py-3 pl-11 pr-4 text-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all font-bold appearance-none cursor-pointer"
+              value={formData.internal_company}
+              onChange={(e) => setFormData({ ...formData, internal_company: e.target.value })}
+            >
+              <option value="" disabled className="bg-slate-900">Seleccionar Empresa...</option>
+              {INTERNAL_COMPANIES.map(c => (
+                <option key={c} value={c} className="bg-slate-900">{c}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Entidad Solicitante */}
+        <div className="md:col-span-1">
+          <label className={labelClass}>Entidad / Proveedor Externo</label>
           <div className="relative">
             <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
             <select
@@ -86,7 +136,7 @@ export const BudgetForm = ({ initialData, onSuccess, onCancel }: BudgetFormProps
               value={formData.entity_id}
               onChange={(e) => setFormData({ ...formData, entity_id: e.target.value })}
             >
-              <option value="" disabled className="bg-slate-900">Seleccionar...</option>
+              <option value="" disabled className="bg-slate-900">Seleccionar Externo...</option>
               {entities.map(e => (
                 <option key={e.id} value={e.id} className="bg-slate-900">{e.business_name}</option>
               ))}
@@ -99,13 +149,17 @@ export const BudgetForm = ({ initialData, onSuccess, onCancel }: BudgetFormProps
           <label className={labelClass}>Rubro / Categoría</label>
           <div className="relative">
             <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
-            <input
+            <select
               required
-              className={inputClass}
-              placeholder="Ej: Infraestructura, IT, Servicios"
+              className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl py-3 pl-11 pr-4 text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/50 transition-all font-medium appearance-none cursor-pointer"
               value={formData.rubro}
               onChange={(e) => setFormData({ ...formData, rubro: e.target.value })}
-            />
+            >
+              <option value="" disabled className="bg-slate-900">Seleccionar Rubro...</option>
+              {RUBROS.map(r => (
+                <option key={r} value={r} className="bg-slate-900">{r}</option>
+              ))}
+            </select>
           </div>
         </div>
 

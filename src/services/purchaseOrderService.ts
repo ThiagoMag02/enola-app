@@ -43,12 +43,15 @@ export const purchaseOrderService = {
     return data;
   },
 
-  async create(po: { budget_id?: string; provider_id?: string; po_number: string; amount: number; description?: string }) {
+  async create(po: { tender_id?: string; provider_id?: string; po_number: string; amount: number; description?: string }) {
     const { data, error } = await supabase
       .from('purchase_orders')
       .insert([{
+        tender_id: po.tender_id || null,
+        provider_id: po.provider_id || null,
         po_number: po.po_number,
         amount: po.amount,
+        description: po.description || null,
         date: new Date().toISOString(),
         status: 'Pending'
       }])

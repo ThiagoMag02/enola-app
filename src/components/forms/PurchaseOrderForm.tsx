@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { purchaseOrderService, PurchaseOrderStatus } from '@/services/purchaseOrderService';
-import { budgetService } from '@/services/budgetService';
+import { tenderService, Tender } from '@/services/tenderService';
 import { entityService, Entity } from '@/services/entityService';
 import { ShoppingCart, Building2, Receipt, DollarSign, FileText, Loader2, Save, X } from 'lucide-react';
 
@@ -15,9 +15,9 @@ interface PurchaseOrderFormProps {
 export const PurchaseOrderForm = ({ initialData, onSuccess, onCancel }: PurchaseOrderFormProps) => {
   const [loading, setLoading] = useState(false);
   const [entities, setEntities] = useState<Entity[]>([]);
-  const [budgets, setBudgets] = useState<any[]>([]);
+  const [tenders, setTenders] = useState<Tender[]>([]);
   const [formData, setFormData] = useState({
-    budget_id: initialData?.budget_id || '',
+    tender_id: initialData?.tender_id || '',
     provider_id: initialData?.provider_id || '',
     po_number: initialData?.po_number || '',
     amount: initialData?.amount || 0,
@@ -27,7 +27,7 @@ export const PurchaseOrderForm = ({ initialData, onSuccess, onCancel }: Purchase
 
   useEffect(() => {
     entityService.getAll().then(setEntities).catch(console.error);
-    budgetService.getAll().then(setBudgets).catch(console.error);
+    tenderService.getAll().then(setTenders).catch(console.error);
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -58,20 +58,19 @@ export const PurchaseOrderForm = ({ initialData, onSuccess, onCancel }: Purchase
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Presupuesto Relacionado */}
+        {/* Licitación Relacionada */}
         <div className="md:col-span-2">
-          <label className={labelClass}>Presupuesto Asociado</label>
+          <label className={labelClass}>Licitación Asociada (Opcional)</label>
           <div className="relative">
             <Receipt className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
             <select
-              required
               className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl py-3 pl-11 pr-4 text-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500/50 transition-all font-medium appearance-none cursor-pointer"
-              value={formData.budget_id}
-              onChange={(e) => setFormData({ ...formData, budget_id: e.target.value })}
+              value={formData.tender_id}
+              onChange={(e) => setFormData({ ...formData, tender_id: e.target.value })}
             >
-              <option value="" disabled className="bg-slate-900">Seleccionar Presupuesto...</option>
-              {budgets.map(b => (
-                <option key={b.id} value={b.id} className="bg-slate-900">#{b.custom_id || b.id.slice(0,5)} - {b.rubro} ({b.amount} ARS)</option>
+              <option value="" className="bg-slate-900">Seleccionar Licitación... (Dejar vacío si es directa)</option>
+              {tenders.map(t => (
+                <option key={t.id} value={t.id} className="bg-slate-900">#{t.tender_number} - ({t.offer_amount} ARS)</option>
               ))}
             </select>
           </div>

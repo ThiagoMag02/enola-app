@@ -42,9 +42,31 @@ export const entityService = {
   },
 
   async create(entity: Omit<Entity, 'id' | 'created_at' | 'updated_at'>): Promise<Entity> {
+    let finalCustomId = entity.custom_id;
+    
+    // Auto-generación de ID (YYYYMM-001)
+    if (!finalCustomId || finalCustomId === 'AUTO') {
+      const prefix = new Date().toISOString().slice(0, 7).replace('-', '');
+      const { data: latest } = await supabase
+        .from('entities')
+        .select('custom_id')
+        .ilike('custom_id', `${prefix}-%`)
+        .order('custom_id', { ascending: false })
+        .limit(1);
+      
+      let nextNum = 1;
+      if (latest && latest.length > 0 && latest[0].custom_id) {
+        const parts = latest[0].custom_id.split('-');
+        if (parts.length === 2 && !isNaN(Number(parts[1]))) {
+          nextNum = parseInt(parts[1]) + 1;
+        }
+      }
+      finalCustomId = `${prefix}-${String(nextNum).padStart(3, '0')}`;
+    }
+
     const { data, error } = await supabase
       .from('entities')
-      .insert([entity])
+      .insert([{ ...entity, custom_id: finalCustomId }])
       .select()
       .single();
     if (error) throw error;

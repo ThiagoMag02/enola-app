@@ -13,7 +13,7 @@ interface EntityFormProps {
 export const EntityForm = ({ initialData, onSuccess, onCancel }: EntityFormProps) => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    custom_id: initialData?.custom_id || '',
+    custom_id: initialData?.custom_id || 'AUTO',
     business_name: initialData?.business_name || '',
     fantasy_name: initialData?.fantasy_name || '',
     cuit: initialData?.cuit || '',
@@ -51,14 +51,15 @@ export const EntityForm = ({ initialData, onSuccess, onCancel }: EntityFormProps
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* ID Entidad y Razón Social */}
         <div className="md:col-span-1">
-          <label className={labelClass}>ID Entidad (Obligatorio)</label>
+          <label className={labelClass}>ID Entidad</label>
           <div className="relative">
             <Hash className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
             <input
+              disabled={!initialData?.id}
               required
-              className={inputClass}
+              className={`${inputClass} disabled:opacity-50 disabled:cursor-not-allowed`}
               placeholder="Ej: ENT-001"
-              value={formData.custom_id}
+              value={formData.custom_id === 'AUTO' ? 'Generación Automática' : formData.custom_id}
               onChange={(e) => setFormData({ ...formData, custom_id: e.target.value })}
             />
           </div>
