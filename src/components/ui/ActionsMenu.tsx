@@ -1,14 +1,16 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { MoreVertical, Pencil, Trash2, CheckCircle, XCircle } from 'lucide-react';
 
 interface ActionsMenuProps {
   onEdit: () => void;
   onDelete: () => void;
+  onApprove?: () => void;
+  onReject?: () => void;
 }
 
-export const ActionsMenu = ({ onEdit, onDelete }: ActionsMenuProps) => {
+export const ActionsMenu = ({ onEdit, onDelete, onApprove, onReject }: ActionsMenuProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -48,6 +50,39 @@ export const ActionsMenu = ({ onEdit, onDelete }: ActionsMenuProps) => {
           >
             <Pencil size={16} className="text-blue-500" /> Editar
           </button>
+          
+          {onApprove && (
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (window.confirm('¿Aprobar presupuesto?')) {
+                  onApprove();
+                }
+                setIsOpen(false);
+              }}
+              className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-300 hover:bg-emerald-500/10 hover:text-emerald-500 transition-colors"
+            >
+              <CheckCircle size={16} className="text-emerald-500" /> Aprobar
+            </button>
+          )}
+
+          {onReject && (
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (window.confirm('¿Desaprobar presupuesto?')) {
+                  onReject();
+                }
+                setIsOpen(false);
+              }}
+              className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-300 hover:bg-orange-500/10 hover:text-orange-500 transition-colors"
+            >
+              <XCircle size={16} className="text-orange-500" /> Desaprobar
+            </button>
+          )}
+
           <button
             onClick={(e) => {
               e.preventDefault();

@@ -20,6 +20,7 @@ export default function BudgetsPage() {
   const [budgets, setBudgets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState<'All' | 'Approved' | 'Rejected' | 'Draft'>('All');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBudget, setEditingBudget] = useState<any | null>(null);
 
@@ -40,14 +41,25 @@ export default function BudgetsPage() {
     }
   };
 
+  const handleUpdateStatus = async (id: string, status: 'Approved' | 'Rejected') => {
+    try {
+      await budgetService.updateStatus(id, status);
+      loadBudgets();
+    } catch (err) {
+      console.error('Error updating budget status:', err);
+      alert('No se pudo actualizar el estado.');
+    }
+  };
+
   useEffect(() => {
     loadBudgets();
   }, []);
 
-  const filteredBudgets = budgets.filter(b => 
-    b.rubro?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    b.custom_id?.includes(searchTerm)
-  );
+  const filteredBudgets = budgets.filter(b => {
+    const matchesSearch = b.rubro?.toLowerCase().includes(searchTerm.toLowerCase()) || b.custom_id?.includes(searchTerm);
+    const matchesFilter = filterType === 'All' ? true : b.status === filterType;
+    return matchesSearch && matchesFilter;
+  });
 
   return (
     <div className="p-8 space-y-8 animate-in slide-in-from-bottom-2 duration-700">
@@ -69,17 +81,46 @@ export default function BudgetsPage() {
         </button>
       </header>
 
-      <div className="relative">
-        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500">
-          <Search size={18} />
+      <div className="flex flex-col md:flex-row gap-4">
+        <div className="relative flex-1">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500">
+            <Search size={18} />
+          </div>
+          <input
+            type="text"
+            placeholder="Buscar presupuesto..."
+            className="w-full bg-slate-900/80 border border-slate-800 rounded-2xl py-3 pl-11 pr-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all font-medium"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
-        <input
-          type="text"
-          placeholder="Buscar presupuesto..."
-          className="w-full bg-slate-900/80 border border-slate-800 rounded-2xl py-3 pl-11 pr-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all font-medium"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+        
+        <div className="flex bg-slate-900/80 border border-slate-800 rounded-2xl p-1 shrink-0 overflow-x-auto">
+          <button 
+            onClick={() => setFilterType('All')}
+            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${filterType === 'All' ? 'bg-slate-800 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
+          >
+            Todos
+          </button>
+          <button 
+            onClick={() => setFilterType('Draft')}
+            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${filterType === 'Draft' ? 'bg-blue-500/20 text-blue-400 shadow-md' : 'text-slate-400 hover:text-blue-400'}`}
+          >
+            Borrador
+          </button>
+          <button 
+            onClick={() => setFilterType('Approved')}
+            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${filterType === 'Approved' ? 'bg-emerald-500/20 text-emerald-400 shadow-md' : 'text-slate-400 hover:text-emerald-400'}`}
+          >
+            Aprobados
+          </button>
+          <button 
+            onClick={() => setFilterType('Rejected')}
+            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${filterType === 'Rejected' ? 'bg-orange-500/20 text-orange-400 shadow-md' : 'text-slate-400 hover:text-orange-400'}`}
+          >
+            Desaprobados
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -94,10 +135,11 @@ export default function BudgetsPage() {
               <div className="absolute top-6 right-6">
                 <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
                   budget.status === 'Approved' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 
+                  budget.status === 'Rejected' ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20' : 
                   budget.status === 'Draft' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 
                   'bg-slate-700/50 text-slate-300'
                 }`}>
-                  {budget.status === 'Approved' ? 'Aprobado' : budget.status === 'Draft' ? 'Borrador' : budget.status}
+                  {budget.status === 'Approved' ? 'Aprobado' : budget.status === 'Rejected' ? 'Desaprobado' : budget.status === 'Draft' ? 'Borrador' : budget.status}
                 </span>
               </div>
 
@@ -108,6 +150,8 @@ export default function BudgetsPage() {
                     setIsModalOpen(true);
                   }}
                   onDelete={() => handleDelete(budget.id)}
+                  onApprove={budget.status !== 'Approved' ? () => handleUpdateStatus(budget.id, 'Approved') : undefined}
+                  onReject={budget.status !== 'Rejected' ? () => handleUpdateStatus(budget.id, 'Rejected') : undefined}
                 />
               </div>
 
@@ -124,7 +168,7 @@ export default function BudgetsPage() {
               <div className="space-y-3 mb-6">
                 <div className="flex items-center gap-3 text-sm text-slate-400">
                    <Calendar size={16} className="text-slate-600" />
-                   {new Date(budget.date).toLocaleDateString('es-AR', { year: 'numeric', month: 'long', day: 'numeric' })}
+                   {new Date(budget.date + (budget.date.includes('T') ? '' : 'T12:00:00Z')).toLocaleDateString('es-AR', { year: 'numeric', month: 'long', day: 'numeric' })}
                 </div>
                 <div className="flex items-center gap-3 text-sm text-slate-400">
                    <DollarSign size={16} className="text-emerald-600/50" />

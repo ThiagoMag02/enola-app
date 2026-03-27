@@ -49,7 +49,7 @@ export const budgetService = {
   async create(budget: Omit<Budget, 'id' | 'created_at' | 'updated_at' | 'entity' | 'provider'>) {
     const { data, error } = await supabase
       .from('budgets')
-      .insert([{ ...budget, date: new Date().toISOString(), status: 'Draft' }])
+      .insert([{ ...budget, date: budget.date || new Date().toISOString().split('T')[0], status: budget.status || 'Draft' }])
       .select()
       .single();
     if (error) throw error;

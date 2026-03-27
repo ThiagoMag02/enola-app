@@ -12,12 +12,12 @@ interface BudgetFormProps {
 }
 
 const INTERNAL_COMPANIES = [
-  "SUSTENTO SA", "GREEN GO SRL", "SUR FERRETERO", "MAXVIAL", 
-  "NEXXUM", "INDUMETAL", "MARLESA", "DUAL VIAL SA"
+  "SUSTENTO SA", "GREEN GO SRL", "SUR FERRETERO", "MAXVIAL",
+  "NEXXUM", "INNDUMETAL", "MARLE SA", "DUAL VIAL SA"
 ];
 
 const RUBROS = [
-  "Indumentaria", "Obras y Servicios", "Electricidad", "Equipos Alquiler", 
+  "Indumentaria", "Obras y Servicios", "Electricidad", "Equipos Alquiler",
   "Forestación", "Pintura vial", "Farmacia", "Ferreteria"
 ];
 
@@ -36,8 +36,15 @@ export const BudgetForm = ({ initialData, onSuccess, onCancel }: BudgetFormProps
     }
   }
 
+  const getCurrentDate = () => {
+    const now = new Date();
+    const local = new Date(now.getTime() - (now.getTimezoneOffset() * 60000));
+    return local.toISOString().split('T')[0];
+  };
+
   const [formData, setFormData] = useState({
     custom_id: initialData?.custom_id || '',
+    date: initialData?.date ? new Date(initialData.date).toISOString().split('T')[0] : getCurrentDate(),
     entity_id: initialData?.entity_id || '',
     internal_company: initialInternalCompany,
     provider_id: initialData?.provider_id || '',
@@ -54,16 +61,16 @@ export const BudgetForm = ({ initialData, onSuccess, onCancel }: BudgetFormProps
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.entity_id) return alert('Debes seleccionar una entidad');
-    
+
     setLoading(true);
     try {
-      const finalDescription = formData.internal_company 
+      const finalDescription = formData.internal_company
         ? `[EMPRESA: ${formData.internal_company}]\n\n${formData.description}`
         : formData.description;
 
-      // Limpiamos campos opcionales para evitar errores de tipo UUID en Supabase
       const cleanData = {
         custom_id: formData.custom_id || null,
+        date: formData.date,
         entity_id: formData.entity_id,
         provider_id: formData.provider_id || null,
         rubro: formData.rubro,
@@ -141,6 +148,21 @@ export const BudgetForm = ({ initialData, onSuccess, onCancel }: BudgetFormProps
                 <option key={e.id} value={e.id} className="bg-slate-900">{e.business_name}</option>
               ))}
             </select>
+          </div>
+        </div>
+
+        {/* Fecha */}
+        <div>
+          <label className={labelClass}>Fecha del Presupuesto</label>
+          <div className="relative">
+            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+            <input
+              required
+              type="date"
+              className={inputClass}
+              value={formData.date}
+              onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+            />
           </div>
         </div>
 
