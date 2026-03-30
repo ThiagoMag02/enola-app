@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { budgetService, Budget } from '@/services/budgetService';
+import { approvalService } from '@/services/approvalService';
 import { Modal } from '@/components/ui/Modal';
 import { BudgetForm } from '@/components/forms/BudgetForm';
 import { ActionsMenu } from '@/components/ui/ActionsMenu';
@@ -23,6 +24,12 @@ export default function BudgetsPage() {
   const [filterType, setFilterType] = useState<'All' | 'Approved' | 'Rejected' | 'Draft'>('All');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBudget, setEditingBudget] = useState<any | null>(null);
+  
+  // States for Approval with File Number
+  const [isApprovalModalOpen, setIsApprovalModalOpen] = useState(false);
+  const [approvingBudgetId, setApprovingBudgetId] = useState<string | null>(null);
+  const [approvalFileNumber, setApprovalFileNumber] = useState('');
+  const [isApproving, setIsApproving] = useState(false);
 
   const loadBudgets = () => {
     setLoading(true);
@@ -42,12 +49,38 @@ export default function BudgetsPage() {
   };
 
   const handleUpdateStatus = async (id: string, status: 'Approved' | 'Rejected') => {
+    if (status === 'Approved') {
+        setApprovingBudgetId(id);
+        setApprovalFileNumber('');
+        setIsApprovalModalOpen(true);
+        return;
+    }
+
     try {
       await budgetService.updateStatus(id, status);
       loadBudgets();
     } catch (err) {
       console.error('Error updating budget status:', err);
       alert('No se pudo actualizar el estado.');
+    }
+  };
+
+  const confirmApproval = async () => {
+    if (!approvingBudgetId) return;
+    if (!approvalFileNumber) return alert('Debes cargar el numero de expediente');
+
+    setIsApproving(true);
+    try {
+        await approvalService.approveBudget(approvingBudgetId, approvalFileNumber);
+        setIsApprovalModalOpen(false);
+        setApprovingBudgetId(null);
+        setApprovalFileNumber('');
+        loadBudgets();
+    } catch (err) {
+        console.error('Error approving budget:', err);
+        alert('Ocurrió un error al aprobar el presupuesto.');
+    } finally {
+        setIsApproving(false);
     }
   };
 
@@ -177,9 +210,14 @@ export default function BudgetsPage() {
                    </span>
                 </div>
                 <div className="flex items-center gap-3 text-sm text-slate-400">
-                   <Building2 size={16} className="text-slate-600" />
                    {budget.entity?.business_name || 'Entidad no asignada'}
                 </div>
+                {budget.approvals && budget.approvals[0]?.file_number && (
+                  <div className="flex items-center gap-3 text-sm text-amber-400 font-bold bg-amber-500/10 p-2 rounded-xl border border-amber-500/20">
+                     <FileText size={16} />
+                     <span>Expte: {budget.approvals[0].file_number}</span>
+                  </div>
+                )}
               </div>
 
               <div className="pt-6 border-t border-slate-800 flex justify-between items-center bg-gradient-to-t from-slate-900/50 to-transparent -mx-6 -mb-6 p-6 rounded-b-3xl">
@@ -217,6 +255,53 @@ export default function BudgetsPage() {
             setEditingBudget(null);
           }} 
         />
+      </Modal>
+
+      {/* MODAL DE APROBACION - CARGA DE EXPEDIENTE */}
+      <Modal 
+        isOpen={isApprovalModalOpen} 
+        onClose={() => setIsApprovalModalOpen(false)} 
+        title="Aprobar Presupuesto"
+      >
+        <div className="space-y-6">
+            <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl">
+                <p className="text-emerald-400 text-sm font-bold flex items-center gap-2">
+                    <Receipt size={16} /> Estás aprobando este presupuesto.
+                </p>
+                <p className="text-slate-400 text-xs mt-1">Por favor, ingresa el número de expediente relacionado para completar el trámite.</p>
+            </div>
+
+            <div>
+                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1">Número de Expediente</label>
+                <div className="relative">
+                    <FileText className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                    <input
+                        required
+                        className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl py-4 pl-11 pr-4 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/50 transition-all font-bold text-lg"
+                        placeholder="Ej: EXP-2026-XXXX"
+                        value={approvalFileNumber}
+                        onChange={(e) => setApprovalFileNumber(e.target.value)}
+                        autoFocus
+                    />
+                </div>
+            </div>
+
+            <footer className="flex justify-end gap-3 pt-4">
+                 <button
+                    onClick={() => setIsApprovalModalOpen(false)}
+                    className="px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-slate-500 hover:text-white hover:bg-slate-800/50 transition-all"
+                >
+                    Cancelar
+                </button>
+                <button
+                    onClick={confirmApproval}
+                    disabled={isApproving || !approvalFileNumber}
+                    className="px-8 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-xl shadow-emerald-600/20 disabled:opacity-50 flex items-center gap-2"
+                >
+                    {isApproving ? 'Procesando...' : 'Confirmar Aprobación'}
+                </button>
+            </footer>
+        </div>
       </Modal>
     </div>
   );

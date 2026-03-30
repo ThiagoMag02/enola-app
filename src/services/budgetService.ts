@@ -12,6 +12,8 @@ export interface Budget {
   amount: number;
   description?: string;
   status: BudgetStatus;
+  approvals?: any[]; // Joined data
+  file_number?: string; // We'll map this from approvals manually if needed or via transform
   created_at: string;
   updated_at?: string;
   entity?: any;
@@ -25,7 +27,8 @@ export const budgetService = {
       .select(`
         *,
         entity:entities!entity_id(*),
-        provider:entities!provider_id(*)
+        provider:entities!provider_id(*),
+        approvals(file_number)
       `)
       .order('date', { ascending: false });
     if (error) throw error;
@@ -38,7 +41,8 @@ export const budgetService = {
       .select(`
         *,
         entity:entities!entity_id(*),
-        provider:entities!provider_id(*)
+        provider:entities!provider_id(*),
+        approvals(file_number)
       `)
       .eq('id', id)
       .single();

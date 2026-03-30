@@ -7,13 +7,13 @@ import { InvoiceForm } from '@/components/forms/InvoiceForm';
 import { ActionsMenu } from '@/components/ui/ActionsMenu';
 import { 
   FileText, 
-  Search, 
-  Plus, 
   CreditCard,
   CheckCircle2,
   Clock,
-  MoreVertical,
-  ArrowRight
+  ShoppingCart,
+  TrendingUp,
+  AlertCircle,
+  Plus
 } from 'lucide-react';
 
 export default function InvoicesPage() {
@@ -30,6 +30,7 @@ export default function InvoicesPage() {
   };
 
   const handleDelete = async (id: string) => {
+    if (!confirm('¿Seguro que deseas eliminar esta factura?')) return;
     try {
       await invoiceService.delete(id);
       loadInvoices();
@@ -43,14 +44,30 @@ export default function InvoicesPage() {
     loadInvoices();
   }, []);
 
+  // Agrupar facturas por OC
+  const groupedInvoices = invoices.reduce((acc: Record<string, any[]>, inv) => {
+    const poId = inv.purchase_order_id || 'DIRECTA';
+    if (!acc[poId]) acc[poId] = [];
+    acc[poId].push(inv);
+    return acc;
+  }, {});
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(amount);
+  };
+
+  const calculatePaid = (inv: any) => {
+    return (inv.payments || []).reduce((acc: number, curr: any) => acc + Number(curr.amount || 0), 0);
+  };
+
   return (
     <div className="p-8 space-y-8 animate-in slide-in-from-right-2 duration-500">
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-indigo-950/20 p-6 rounded-3xl border border-indigo-900/30 shadow-xl">
         <div>
           <h2 className="text-3xl font-extrabold text-white flex items-center gap-3">
-            <FileText className="text-indigo-400" /> Facturación
+            <FileText className="text-indigo-400" /> Facturación y Cobros
           </h2>
-          <p className="text-indigo-200/60 mt-1 uppercase tracking-tighter font-bold text-xs">Gestión y control de cobros y pagos.</p>
+          <p className="text-indigo-200/60 mt-1 uppercase tracking-tighter font-bold text-xs">Control de saldos por OC y seguimiento de pagos.</p>
         </div>
         <button 
           onClick={() => {
@@ -63,82 +80,90 @@ export default function InvoicesPage() {
         </button>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-lg relative overflow-hidden group">
-          <div className="absolute bottom-0 right-0 p-4 text-emerald-500/10 group-hover:text-emerald-500/20 transition-colors">
-            <CheckCircle2 size={100} className="rotate-12 translate-x-1/4 translate-y-1/4" />
-          </div>
-          <p className="text-xs font-black text-slate-500 uppercase tracking-widest">Facturas Cobradas</p>
-          <div className="text-4xl font-extrabold text-emerald-400 mt-2">--</div>
-        </div>
-        <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-lg relative overflow-hidden group">
-          <div className="absolute bottom-0 right-0 p-4 text-amber-500/10 group-hover:text-amber-500/20 transition-colors">
-            <Clock size={100} className="rotate-12 translate-x-1/4 translate-y-1/4" />
-          </div>
-          <p className="text-xs font-black text-slate-500 uppercase tracking-widest">Pendientes de Pago</p>
-          <div className="text-4xl font-extrabold text-amber-400 mt-2">--</div>
-        </div>
-      </div>
+      <div className="space-y-12">
+        {loading ? (
+             <div className="py-20 text-center animate-pulse text-indigo-400 font-bold uppercase tracking-widest">Cargando Facturas...</div>
+        ) : Object.keys(groupedInvoices).length > 0 ? (
+          Object.entries(groupedInvoices).map(([poId, invs]) => {
+            const po = invs[0]?.purchase_order;
+            const totalOC = po?.amount || 0;
+            const totalFacturadoOC = invs.reduce((acc, curr) => acc + Number(curr.amount), 0);
+            const pendienteOC = totalOC - totalFacturadoOC;
 
-      <div className="bg-slate-900/40 rounded-3xl border border-slate-800 shadow-2xl relative min-h-[300px] overflow-visible">
-        <table className="w-full text-left">
-          <thead className="bg-slate-800/80 text-slate-400 text-xs uppercase tracking-widest font-black">
-            <tr>
-              <th className="px-6 py-4">N° Factura / Orden</th>
-              <th className="px-6 py-4">Fecha</th>
-              <th className="px-6 py-4">Importe</th>
-              <th className="px-6 py-4">Estado</th>
-              <th className="px-6 py-4 text-right">Acciones</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-800">
-            {loading ? (
-              Array(3).fill(0).map((_, i) => (
-                <tr key={i} className="animate-pulse">
-                  <td className="px-6 py-6" colSpan={5}><div className="h-4 bg-slate-800 rounded w-full"></div></td>
-                </tr>
-              ))
-            ) : invoices.length > 0 ? (
-              invoices.map((inv) => (
-                <tr key={inv.id} className="hover:bg-slate-800/30 transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="text-sm font-black text-white">{inv.invoice_number}</div>
-                    <div className="text-xs text-slate-500 mt-0.5">OC: {inv.purchase_order?.po_number || '---'}</div>
-                  </td>
-                  <td className="px-6 py-4 font-mono text-xs text-slate-400 uppercase tracking-tighter">
-                   {new Date(inv.date).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 font-mono font-bold text-indigo-400 text-lg">
-                    ${new Intl.NumberFormat().format(inv.amount)}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${
-                      inv.status === 'Paid' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'
-                    }`}>
-                      {inv.status === 'Paid' ? 'Pagada' : 'Pendiente'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex justify-end gap-2">
-                      <button className="bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white p-2 rounded-xl transition-all">
-                        <CreditCard size={18} />
-                      </button>
-                      <ActionsMenu 
-                        onEdit={() => {
-                          setEditingInvoice(inv);
-                          setIsModalOpen(true);
-                        }}
-                        onDelete={() => handleDelete(inv.id)}
-                      />
+            return (
+              <section key={poId} className="space-y-4">
+                <div className="flex items-center justify-between px-2">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-indigo-500/10 rounded-lg border border-indigo-500/20">
+                            <ShoppingCart size={18} className="text-indigo-400" />
+                        </div>
+                        <div>
+                            <h3 className="text-sm font-black text-white uppercase tracking-wider">
+                                {po ? `OC: ${po.po_number || poId.slice(0,8)}` : 'Facturación Directa'}
+                            </h3>
+                            <p className="text-[10px] text-slate-500 font-bold uppercase">
+                                Total OC: {formatCurrency(totalOC)} | <span className={pendienteOC > 0 ? 'text-amber-500' : 'text-emerald-500'}>Restante: {formatCurrency(pendienteOC)}</span>
+                            </p>
+                        </div>
                     </div>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr><td colSpan={5} className="py-20 text-center text-slate-500 italic">Esperando datos de facturación...</td></tr>
-            )}
-          </tbody>
-        </table>
+                </div>
+
+                <div className="bg-slate-900/40 rounded-3xl border border-slate-800 shadow-2xl overflow-hidden">
+                    <table className="w-full text-left border-collapse">
+                    <thead className="bg-slate-800/50 text-slate-500 text-[10px] uppercase tracking-widest font-black">
+                        <tr>
+                        <th className="px-6 py-4">N° Factura / Fecha</th>
+                        <th className="px-6 py-4">Importe Factura</th>
+                        <th className="px-6 py-4">Pagado</th>
+                        <th className="px-6 py-4">Pendiente de Pago</th>
+                        <th className="px-6 py-4 text-right">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800">
+                        {invs.map((inv) => {
+                            const paid = calculatePaid(inv);
+                            const remaining = inv.amount - paid;
+                            const isPaid = remaining <= 0;
+
+                            return (
+                                <tr key={inv.id} className="hover:bg-slate-800/30 transition-colors group">
+                                    <td className="px-6 py-4">
+                                        <div className="text-sm font-black text-white group-hover:text-indigo-400 transition-colors">{inv.invoice_number}</div>
+                                        <div className="text-[10px] text-slate-500 mt-0.5 font-bold">{new Date(inv.date).toLocaleDateString()}</div>
+                                    </td>
+                                    <td className="px-6 py-4 font-mono text-xs text-slate-400">
+                                        {formatCurrency(inv.amount)}
+                                    </td>
+                                    <td className="px-6 py-4 font-mono text-xs text-emerald-500 font-bold">
+                                        {formatCurrency(paid)}
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className={`flex items-center gap-2 px-3 py-1 rounded-full w-fit font-black text-[10px] ${isPaid ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'}`}>
+                                            {isPaid ? <CheckCircle2 size={12} /> : <AlertCircle size={12} />}
+                                            {isPaid ? 'LIQUIDADA' : `DEBE: ${formatCurrency(remaining)}`}
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 text-right">
+                                        <ActionsMenu 
+                                            onEdit={() => {
+                                                setEditingInvoice(inv);
+                                                setIsModalOpen(true);
+                                            }}
+                                            onDelete={() => handleDelete(inv.id)}
+                                        />
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                    </table>
+                </div>
+              </section>
+            );
+          })
+        ) : (
+          <div className="py-40 text-center text-slate-600 font-black uppercase tracking-widest italic border-2 border-dashed border-slate-800 rounded-3xl">Sin facturas registradas.</div>
+        )}
       </div>
 
       <Modal 

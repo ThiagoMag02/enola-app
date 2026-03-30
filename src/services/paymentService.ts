@@ -19,10 +19,10 @@ export const paymentService = {
     return data;
   },
 
-  async create(payment: { invoice_id: string; amount: number; method?: string }) {
+  async create(payment: { invoice_id: string; amount: number; method?: string; date?: string }) {
     const { data, error } = await supabase
       .from('payments')
-      .insert([{ ...payment, date: new Date().toISOString(), method: payment.method || 'Transfer' }])
+      .insert([{ ...payment, date: payment.date || new Date().toISOString(), method: payment.method || 'Transfer' }])
       .select()
       .single();
     if (error) throw error;

@@ -7,13 +7,11 @@ import { PurchaseOrderForm } from '@/components/forms/PurchaseOrderForm';
 import { ActionsMenu } from '@/components/ui/ActionsMenu';
 import { 
   ShoppingCart, 
-  Search, 
   Plus, 
   Clock,
   CheckCircle2,
   AlertCircle,
-  MoreVertical,
-  ArrowRight
+  FileText
 } from 'lucide-react';
 
 export default function PurchaseOrdersPage() {
@@ -50,7 +48,7 @@ export default function PurchaseOrdersPage() {
           <h2 className="text-3xl font-extrabold text-white flex items-center gap-3">
             <ShoppingCart className="text-blue-400" /> Órdenes de Compra
           </h2>
-          <p className="text-slate-400 mt-1">Seguimiento de compras y estados de facturación.</p>
+          <p className="text-slate-400 mt-1 uppercase tracking-widest text-[10px] font-black">Gestión de suministros y vinculación con expedientes.</p>
         </div>
         <button 
           onClick={() => {
@@ -63,20 +61,20 @@ export default function PurchaseOrdersPage() {
         </button>
       </header>
 
-      <div className="bg-slate-900/40 rounded-3xl border border-slate-800 shadow-2xl relative min-h-[300px] overflow-visible">
-        <table className="w-full text-left">
-          <thead className="bg-slate-800/50 text-slate-400 text-xs uppercase tracking-widest font-black">
+      <div className="bg-slate-900/40 rounded-3xl border border-slate-800 shadow-2xl relative min-h-[300px] overflow-x-auto">
+        <table className="w-full text-left border-collapse">
+          <thead className="bg-slate-800/50 text-slate-400 text-[10px] uppercase tracking-widest font-black">
             <tr>
               <th className="px-6 py-4">N° Orden / Fecha</th>
-              <th className="px-6 py-4">Licitación / Aprobación</th>
+              <th className="px-6 py-4">Expediente / Licitación</th>
               <th className="px-6 py-4">Importe</th>
-              <th className="px-6 py-4">Estado de Facturación</th>
+              <th className="px-6 py-4">Estado</th>
               <th className="px-6 py-4 text-right">Acciones</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800">
             {loading ? (
-              Array(2).fill(0).map((_, i) => (
+              Array(3).fill(0).map((_, i) => (
                 <tr key={i} className="animate-pulse">
                   <td className="px-6 py-6" colSpan={5}><div className="h-4 bg-slate-800 rounded w-full"></div></td>
                 </tr>
@@ -85,27 +83,35 @@ export default function PurchaseOrdersPage() {
               pos.map((po) => (
                 <tr key={po.id} className="hover:bg-slate-800/30 transition-colors group">
                   <td className="px-6 py-4">
-                    <div className="text-sm font-black text-white">{po.po_number}</div>
-                    <div className="text-xs text-slate-500 mt-0.5">{new Date(po.date).toLocaleDateString()}</div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-xs text-slate-400 font-medium">
-                      {po.tender ? `Lic: ${po.tender.tender_number}` : po.approval ? `Aprob: ${po.approval.id.slice(0,8)}` : 'Vínculo Directo'}
+                    <div className="text-sm font-black text-white group-hover:text-blue-400 transition-colors">{po.po_number || '---'}</div>
+                    <div className="text-[10px] text-slate-500 mt-0.5 font-bold uppercase tracking-tighter">
+                      {new Date(po.date).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' })}
                     </div>
                   </td>
-                  <td className="px-6 py-4 font-mono font-bold text-blue-400">
-                    ${new Intl.NumberFormat().format(po.amount)}
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-xs font-black text-purple-400 flex items-center gap-1">
+                        <FileText size={12} />
+                        {po.tender?.file_number || 'S/N'}
+                      </span>
+                      <span className="text-[9px] text-slate-500 font-bold uppercase overflow-hidden text-ellipsis whitespace-nowrap max-w-[150px]">
+                        {po.tender ? `LIC: ${po.tender.tender_number}` : po.approval ? `APROB: ${po.approval.id.slice(0,8)}` : 'DIRECTA'}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 font-mono font-bold text-white text-sm">
+                    ${new Intl.NumberFormat('es-AR').format(po.amount)}
                   </td>
                   <td className="px-6 py-4">
-                    <div className={`flex items-center gap-2 text-xs font-bold uppercase tracking-wider ${
-                      po.status === 'Billed' ? 'text-emerald-400' : 
-                      po.status === 'Partial' ? 'text-amber-400' : 
-                      'text-slate-400'
+                    <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full w-fit ${
+                      po.status === 'Billed' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 
+                      po.status === 'Partial' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 
+                      'bg-slate-700/30 text-slate-400 border border-slate-700/50'
                     }`}>
-                      {po.status === 'Billed' ? <CheckCircle2 size={14} /> : 
-                       po.status === 'Partial' ? <Clock size={14} /> : 
-                       <AlertCircle size={14} />}
-                      {po.status === 'Billed' ? 'Completada' : po.status === 'Partial' ? 'Facturación Parcial' : 'Pendiente'}
+                      {po.status === 'Billed' ? <CheckCircle2 size={12} /> : 
+                       po.status === 'Partial' ? <Clock size={12} /> : 
+                       <AlertCircle size={12} />}
+                      {po.status === 'Billed' ? 'Completado' : po.status === 'Partial' ? 'Parcial' : 'Pendiente'}
                     </div>
                   </td>
                   <td className="px-6 py-4 text-right">
@@ -120,7 +126,7 @@ export default function PurchaseOrdersPage() {
                 </tr>
               ))
             ) : (
-              <tr><td colSpan={5} className="py-20 text-center text-slate-600 font-bold">Sin órdenes registradas.</td></tr>
+              <tr><td colSpan={5} className="py-20 text-center text-slate-600 font-black uppercase tracking-widest text-xs italic">Sin órdenes de compra registradas.</td></tr>
             )}
           </tbody>
         </table>

@@ -22,7 +22,8 @@ export const purchaseOrderService = {
       .select(`
         *,
         tender:tenders(*),
-        approval:approvals(*)
+        approval:approvals(*),
+        invoices(amount)
       `)
       .order('date', { ascending: false });
     if (error) throw error;
@@ -35,7 +36,8 @@ export const purchaseOrderService = {
       .select(`
         *,
         tender:tenders(*),
-        approval:approvals(*)
+        approval:approvals(*),
+        invoices(amount)
       `)
       .eq('id', id)
       .single();
@@ -43,16 +45,14 @@ export const purchaseOrderService = {
     return data;
   },
 
-  async create(po: { tender_id?: string; provider_id?: string; po_number: string; amount: number; description?: string }) {
+  async create(po: { tender_id?: string; po_number: string; amount: number; date?: string }) {
     const { data, error } = await supabase
       .from('purchase_orders')
       .insert([{
         tender_id: po.tender_id || null,
-        provider_id: po.provider_id || null,
         po_number: po.po_number,
         amount: po.amount,
-        description: po.description || null,
-        date: new Date().toISOString(),
+        date: po.date || new Date().toISOString(),
         status: 'Pending'
       }])
       .select()

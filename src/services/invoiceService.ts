@@ -17,7 +17,11 @@ export const invoiceService = {
   async getAll() {
     const { data, error } = await supabase
       .from('invoices')
-      .select(`*, purchase_order:purchase_orders(*)`)
+      .select(`
+        *,
+        purchase_order:purchase_orders(*),
+        payments(amount)
+      `)
       .order('date', { ascending: false });
     if (error) throw error;
     return data;
@@ -26,17 +30,21 @@ export const invoiceService = {
   async getById(id: string) {
     const { data, error } = await supabase
       .from('invoices')
-      .select(`*, purchase_order:purchase_orders(*)`)
+      .select(`
+        *,
+        purchase_order:purchase_orders(*),
+        payments(amount)
+      `)
       .eq('id', id)
       .single();
     if (error) throw error;
     return data;
   },
 
-  async create(invoice: { purchase_order_id: string; invoice_number: string; amount: number; status?: InvoiceStatus }) {
+  async create(invoice: { purchase_order_id: string; invoice_number: string; amount: number; date?: string; status?: InvoiceStatus }) {
     const { data, error } = await supabase
       .from('invoices')
-      .insert([{ ...invoice, date: new Date().toISOString(), status: invoice.status || 'Pending' }])
+      .insert([{ ...invoice, date: invoice.date || new Date().toISOString(), status: invoice.status || 'Pending' }])
       .select()
       .single();
     if (error) throw error;

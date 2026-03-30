@@ -9,13 +9,9 @@ import {
   Gavel, 
   Search, 
   Plus, 
-  ArrowRight,
   TrendingDown,
   TrendingUp,
   FileText,
-  Clock,
-  CheckCircle2,
-  Calendar,
   DollarSign
 } from 'lucide-react';
 
@@ -46,6 +42,15 @@ export default function TendersPage() {
     loadTenders();
   }, []);
 
+  const calculateDiff = (offer: number, budget: number) => {
+    if (!budget || budget === 0) return 0;
+    return ((offer - budget) / budget) * 100;
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(amount);
+  };
+
   return (
     <div className="p-8 space-y-8 animate-in zoom-in-95 duration-500">
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900/50 p-6 rounded-3xl border border-slate-800 shadow-xl">
@@ -53,7 +58,7 @@ export default function TendersPage() {
           <h2 className="text-3xl font-extrabold text-white flex items-center gap-3">
             <Gavel className="text-blue-400" /> Licitaciones
           </h2>
-          <p className="text-slate-400 mt-1 uppercase tracking-widest text-[10px] font-black">Control de procesos de oferta y adjudicación.</p>
+          <p className="text-slate-400 mt-1 uppercase tracking-widest text-[10px] font-black">Control de procesos de oferta y adjudicación respecto al presupuesto.</p>
         </div>
         <button 
           onClick={() => {
@@ -66,56 +71,76 @@ export default function TendersPage() {
         </button>
       </header>
 
-      <div className="bg-slate-900/40 rounded-3xl border border-slate-800 shadow-2xl relative min-h-[300px] overflow-visible">
-        <table className="w-full text-left">
-          <thead className="bg-slate-800/50 text-slate-400 text-xs uppercase tracking-widest font-black">
+      <div className="bg-slate-900/40 rounded-3xl border border-slate-800 shadow-2xl relative min-h-[300px] overflow-x-auto">
+        <table className="w-full text-left border-collapse">
+          <thead className="bg-slate-800/50 text-slate-400 text-[10px] uppercase tracking-widest font-black">
             <tr>
-              <th className="px-6 py-4">N° Tender / Ref</th>
-              <th className="px-6 py-4">Fecha</th>
-              <th className="px-6 py-4">Importe Ofertado</th>
-              <th className="px-6 py-4">Presupuesto</th>
+              <th className="px-6 py-4">Proceso / Ref</th>
+              <th className="px-6 py-4">Presupuesto Referencia</th>
+              <th className="px-6 py-4">Monto Presupuesto</th>
+              <th className="px-6 py-4">Monto Ofertado</th>
+              <th className="px-6 py-4">Diferencia (%)</th>
               <th className="px-6 py-4 text-right">Acciones</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800">
             {loading ? (
-              Array(2).fill(0).map((_, i) => (
+              Array(3).fill(0).map((_, i) => (
                 <tr key={i} className="animate-pulse">
-                  <td className="px-6 py-6" colSpan={5}><div className="h-4 bg-slate-800 rounded w-full"></div></td>
+                  <td className="px-6 py-6" colSpan={6}><div className="h-4 bg-slate-800 rounded w-full"></div></td>
                 </tr>
               ))
             ) : tenders.length > 0 ? (
-              tenders.map((tender) => (
-                <tr key={tender.id} className="hover:bg-slate-800/30 transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="text-sm font-black text-white">{tender.tender_number}</div>
-                    <div className="text-xs text-slate-500 mt-0.5">Ref: {tender.file_number || '---'}</div>
-                  </td>
-                  <td className="px-6 py-4 font-mono text-xs text-slate-400 uppercase tracking-tighter">
-                   {new Date(tender.tender_date).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 font-mono font-bold text-blue-400 text-lg">
-                    ${new Intl.NumberFormat().format(tender.offer_amount)}
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2 text-xs font-bold text-slate-300">
-                       <FileText size={14} className="text-slate-500" />
-                       #{tender.budget?.custom_id || '---'}
-                    </div>
-                  </td>
-                   <td className="px-6 py-4 text-right">
-                    <ActionsMenu 
-                      onEdit={() => {
-                        setEditingTender(tender);
-                        setIsModalOpen(true);
-                      }}
-                      onDelete={() => handleDelete(tender.id)}
-                    />
-                  </td>
-                </tr>
-              ))
+              tenders.map((tender) => {
+                const diff = calculateDiff(tender.offer_amount, tender.budget?.amount);
+                const isOver = diff >= 0;
+
+                return (
+                  <tr key={tender.id} className="hover:bg-slate-800/30 transition-colors group">
+                    <td className="px-6 py-4">
+                      <div className="text-sm font-black text-white group-hover:text-blue-400 transition-colors">{tender.tender_number}</div>
+                      <div className="text-[10px] text-slate-500 mt-0.5 font-bold">FECHA: {new Date(tender.tender_date).toLocaleDateString()}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col">
+                        <span className="text-xs font-bold text-slate-300 flex items-center gap-1">
+                          <FileText size={12} className="text-slate-500" />
+                          #{tender.budget?.custom_id || 'S/N'}
+                        </span>
+                        <span className="text-[9px] text-slate-500 uppercase font-black tracking-tighter truncate max-w-[150px]">
+                          {tender.budget?.rubro}
+                        </span>
+                        <span className="text-[9px] text-slate-600 font-bold">
+                          Expte: {tender.file_number || 'No asignado'}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 font-mono text-xs text-slate-400">
+                      {formatCurrency(tender.budget?.amount || 0)}
+                    </td>
+                    <td className="px-6 py-4 font-mono font-bold text-white text-sm">
+                      {formatCurrency(tender.offer_amount)}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full w-fit font-black text-[10px] ${isOver ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}`}>
+                        {isOver ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+                        {diff.toFixed(2)}%
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <ActionsMenu 
+                        onEdit={() => {
+                          setEditingTender(tender);
+                          setIsModalOpen(true);
+                        }}
+                        onDelete={() => handleDelete(tender.id)}
+                      />
+                    </td>
+                  </tr>
+                );
+              })
             ) : (
-              <tr><td colSpan={5} className="py-20 text-center text-slate-500 italic">No hay ofertas de licitación de momento.</td></tr>
+              <tr><td colSpan={6} className="py-20 text-center text-slate-500 italic font-bold">No hay licitaciones registradas.</td></tr>
             )}
           </tbody>
         </table>

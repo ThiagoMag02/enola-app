@@ -14,16 +14,34 @@ interface TenderFormProps {
 export const TenderForm = ({ initialData, onSuccess, onCancel }: TenderFormProps) => {
   const [loading, setLoading] = useState(false);
   const [budgets, setBudgets] = useState<any[]>([]);
+  const [selectedBudget, setSelectedBudget] = useState<any>(null);
   const [formData, setFormData] = useState({
     budget_id: initialData?.budget_id || '',
     tender_number: initialData?.tender_number || '',
     offer_amount: initialData?.offer_amount || 0,
     file_number: initialData?.file_number || '',
+    tender_date: initialData?.tender_date?.split('T')[0] || new Date().toISOString().split('T')[0],
   });
 
   useEffect(() => {
     budgetService.getAll().then(setBudgets).catch(console.error);
   }, []);
+
+  useEffect(() => {
+    if (formData.budget_id) {
+      const budget = budgets.find(b => b.id === formData.budget_id);
+      setSelectedBudget(budget);
+      
+      if (!initialData?.id || formData.budget_id !== initialData?.budget_id) {
+        const inferredFile = budget?.approvals?.[0]?.file_number;
+        if (inferredFile) {
+          setFormData(prev => ({ ...prev, file_number: inferredFile }));
+        }
+      }
+    } else {
+      setSelectedBudget(null);
+    }
+  }, [formData.budget_id, budgets, initialData?.id, initialData?.budget_id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,6 +88,21 @@ export const TenderForm = ({ initialData, onSuccess, onCancel }: TenderFormProps
           </div>
         </div>
 
+        {/* Fecha */}
+        <div>
+          <label className={labelClass}>Fecha</label>
+          <div className="relative">
+            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+            <input
+              required
+              type="date"
+              className={inputClass}
+              value={formData.tender_date}
+              onChange={(e) => setFormData({ ...formData, tender_date: e.target.value })}
+            />
+          </div>
+        </div>
+
         {/* Nro de Licitación */}
         <div>
           <label className={labelClass}>Número de Licitación</label>
@@ -98,6 +131,21 @@ export const TenderForm = ({ initialData, onSuccess, onCancel }: TenderFormProps
             />
           </div>
         </div>
+
+        {/* Monto del Presupuesto (Inferido) */}
+        {selectedBudget && (
+          <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+            <label className={labelClass}>Monto del Presupuesto</label>
+            <div className="relative">
+              <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-500" size={18} />
+              <input
+                disabled
+                className={`${inputClass} !border-emerald-500/30 !bg-emerald-500/5 text-emerald-400 font-bold cursor-not-allowed`}
+                value={new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(selectedBudget.amount)}
+              />
+            </div>
+          </div>
+        )}
 
         {/* Monto Ofertado */}
         <div>

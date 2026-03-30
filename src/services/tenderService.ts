@@ -31,10 +31,10 @@ export const tenderService = {
     return data;
   },
 
-  async create(tender: { budget_id: string; tender_number: string; offer_amount: number; file_number?: string }) {
+  async create(tender: { budget_id: string; tender_number: string; offer_amount: number; file_number?: string; tender_date?: string }) {
     const { data, error } = await supabase
       .from('tenders')
-      .insert([{ ...tender, tender_date: new Date().toISOString() }])
+      .insert([{ ...tender, tender_date: tender.tender_date || new Date().toISOString() }])
       .select()
       .single();
     if (error) throw error;

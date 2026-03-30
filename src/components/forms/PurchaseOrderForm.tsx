@@ -3,8 +3,7 @@
 import { useState, useEffect } from 'react';
 import { purchaseOrderService, PurchaseOrderStatus } from '@/services/purchaseOrderService';
 import { tenderService, Tender } from '@/services/tenderService';
-import { entityService, Entity } from '@/services/entityService';
-import { ShoppingCart, Building2, Receipt, DollarSign, FileText, Loader2, Save, X } from 'lucide-react';
+import { ShoppingCart, Receipt, DollarSign, FileText, Loader2, Save, X, Calendar } from 'lucide-react';
 
 interface PurchaseOrderFormProps {
   initialData?: any;
@@ -14,32 +13,51 @@ interface PurchaseOrderFormProps {
 
 export const PurchaseOrderForm = ({ initialData, onSuccess, onCancel }: PurchaseOrderFormProps) => {
   const [loading, setLoading] = useState(false);
-  const [entities, setEntities] = useState<Entity[]>([]);
   const [tenders, setTenders] = useState<Tender[]>([]);
   const [formData, setFormData] = useState({
     tender_id: initialData?.tender_id || '',
-    provider_id: initialData?.provider_id || '',
     po_number: initialData?.po_number || '',
     amount: initialData?.amount || 0,
     description: initialData?.description || '',
+    file_number: initialData?.file_number || '',
     status: (initialData?.status as PurchaseOrderStatus) || 'Pending',
+    date: initialData?.date?.split('T')[0] || new Date().toISOString().split('T')[0],
   });
 
   useEffect(() => {
-    entityService.getAll().then(setEntities).catch(console.error);
     tenderService.getAll().then(setTenders).catch(console.error);
   }, []);
 
+  // Inferencia desde la Licitación
+  useEffect(() => {
+    if (formData.tender_id && tenders.length > 0) {
+      const selectedTender = tenders.find(t => t.id === formData.tender_id);
+      if (selectedTender) {
+        setFormData(prev => ({
+          ...prev,
+          amount: selectedTender.offer_amount,
+          file_number: selectedTender.file_number || '',
+        }));
+      }
+    }
+  }, [formData.tender_id, tenders]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.provider_id) return alert('Debes seleccionar un proveedor');
     
     setLoading(true);
     try {
+      const cleanData = {
+        tender_id: formData.tender_id || null,
+        po_number: formData.po_number,
+        amount: formData.amount,
+        date: formData.date,
+      };
+
       if (initialData?.id) {
-        await purchaseOrderService.update(initialData.id, formData as any);
+        await purchaseOrderService.update(initialData.id, { ...cleanData, status: formData.status } as any);
       } else {
-        await purchaseOrderService.create(formData as any);
+        await purchaseOrderService.create(cleanData as any);
       }
       onSuccess();
     } catch (error) {
@@ -52,8 +70,6 @@ export const PurchaseOrderForm = ({ initialData, onSuccess, onCancel }: Purchase
 
   const inputClass = "w-full bg-slate-950/50 border border-slate-800 rounded-2xl py-3 pl-11 pr-4 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500/50 transition-all font-medium";
   const labelClass = "block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1";
-
-  const providers = entities.filter(e => e.type === 'Provider' || e.type === 'Both');
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -70,28 +86,22 @@ export const PurchaseOrderForm = ({ initialData, onSuccess, onCancel }: Purchase
             >
               <option value="" className="bg-slate-900">Seleccionar Licitación... (Dejar vacío si es directa)</option>
               {tenders.map(t => (
-                <option key={t.id} value={t.id} className="bg-slate-900">#{t.tender_number} - ({t.offer_amount} ARS)</option>
+                <option key={t.id} value={t.id} className="bg-slate-900">#{t.tender_number} - ({t.file_number})</option>
               ))}
             </select>
           </div>
         </div>
 
-        {/* Proveedor */}
+        {/* Nro de Expediente (Inferido de Licitación) */}
         <div>
-          <label className={labelClass}>Proveedor Seleccionado</label>
+          <label className={labelClass}>Número de Expediente</label>
           <div className="relative">
-            <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
-            <select
-              required
-              className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl py-3 pl-11 pr-4 text-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500/50 transition-all font-medium appearance-none cursor-pointer"
-              value={formData.provider_id}
-              onChange={(e) => setFormData({ ...formData, provider_id: e.target.value })}
-            >
-              <option value="" disabled className="bg-slate-900">Seleccionar Proveedor...</option>
-              {providers.map(p => (
-                <option key={p.id} value={p.id} className="bg-slate-900">{p.business_name}</option>
-              ))}
-            </select>
+            <FileText className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+            <input
+              disabled
+              className={`${inputClass} !bg-purple-500/5 !border-purple-500/30 text-purple-400 font-bold cursor-not-allowed`}
+              value={formData.file_number || 'No asociado'}
+            />
           </div>
         </div>
 
@@ -110,7 +120,22 @@ export const PurchaseOrderForm = ({ initialData, onSuccess, onCancel }: Purchase
           </div>
         </div>
 
-        {/* Monto Final */}
+        {/* Fecha */}
+        <div>
+          <label className={labelClass}>Fecha</label>
+          <div className="relative">
+            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+            <input
+              required
+              type="date"
+              className={inputClass}
+              value={formData.date}
+              onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+            />
+          </div>
+        </div>
+
+        {/* Monto Final (Inferido de Licitación) */}
         <div>
           <label className={labelClass}>Monto Final Orden (ARS)</label>
           <div className="relative">
