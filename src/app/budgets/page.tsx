@@ -235,6 +235,7 @@ export default function BudgetsPage() {
               <th className="px-6 py-4">Entidad Solicitante</th>
               <th className="px-6 py-4">Fecha</th>
               <th className="px-6 py-4">Monto</th>
+              <th className="px-6 py-4">Descripción</th>
               <th className="px-6 py-4">Estado / Expediente</th>
               <th className="px-6 py-4 text-right">Acciones</th>
             </tr>
@@ -243,7 +244,7 @@ export default function BudgetsPage() {
             {loading ? (
               Array(5).fill(0).map((_, i) => (
                 <tr key={i} className="animate-pulse">
-                  <td className="px-6 py-6" colSpan={6}><div className="h-4 bg-slate-800 rounded w-full"></div></td>
+                  <td className="px-6 py-6" colSpan={7}><div className="h-4 bg-slate-800 rounded w-full"></div></td>
                 </tr>
               ))
             ) : filteredBudgets.length > 0 ? (
@@ -264,6 +265,11 @@ export default function BudgetsPage() {
                   </td>
                   <td className="px-6 py-4 font-mono font-bold text-white text-sm">
                     {formatCurrency(budget.amount)}
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="text-[10px] text-slate-400 font-medium max-w-[200px] truncate" title={budget.description}>
+                        {(budget.description || '').replace(/^\[EMPRESA: .*?\]\n\n/, '') || '---'}
+                    </div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex flex-col gap-1.5">
@@ -298,7 +304,7 @@ export default function BudgetsPage() {
               ))
             ) : (
                 <tr>
-                    <td colSpan={6} className="py-20 text-center text-slate-600 font-black uppercase tracking-widest text-xs italic">
+                    <td colSpan={7} className="py-20 text-center text-slate-600 font-black uppercase tracking-widest text-xs italic">
                         No se encontraron presupuestos.
                     </td>
                 </tr>

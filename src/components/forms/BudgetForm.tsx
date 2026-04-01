@@ -64,9 +64,7 @@ export const BudgetForm = ({ initialData, onSuccess, onCancel }: BudgetFormProps
 
     setLoading(true);
     try {
-      const finalDescription = formData.internal_company
-        ? `[EMPRESA: ${formData.internal_company}]\n\n${formData.description}`
-        : formData.description;
+      const finalDescription = formData.description;
 
       const cleanData = {
         custom_id: formData.custom_id || null,
