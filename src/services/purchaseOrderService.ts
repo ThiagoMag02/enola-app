@@ -21,8 +21,8 @@ export const purchaseOrderService = {
       .from('purchase_orders')
       .select(`
         *,
-        tender:tenders(*),
-        approval:approvals(*),
+        tender:tenders(*, budget:budgets(description)),
+        approval:approvals(*, budget:budgets(description)),
         invoices(amount)
       `)
       .order('date', { ascending: false });
@@ -35,8 +35,8 @@ export const purchaseOrderService = {
       .from('purchase_orders')
       .select(`
         *,
-        tender:tenders(*),
-        approval:approvals(*),
+        tender:tenders(*, budget:budgets(description)),
+        approval:approvals(*, budget:budgets(description)),
         invoices(amount)
       `)
       .eq('id', id)

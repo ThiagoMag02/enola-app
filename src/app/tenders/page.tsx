@@ -77,6 +77,7 @@ export default function TendersPage() {
             <tr>
               <th className="px-6 py-4">Proceso / Ref</th>
               <th className="px-6 py-4">Presupuesto Referencia</th>
+              <th className="px-6 py-4">Descripción</th>
               <th className="px-6 py-4">Monto Presupuesto</th>
               <th className="px-6 py-4">Monto Ofertado</th>
               <th className="px-6 py-4">Diferencia (%)</th>
@@ -87,7 +88,7 @@ export default function TendersPage() {
             {loading ? (
               Array(3).fill(0).map((_, i) => (
                 <tr key={i} className="animate-pulse">
-                  <td className="px-6 py-6" colSpan={6}><div className="h-4 bg-slate-800 rounded w-full"></div></td>
+                  <td className="px-6 py-6" colSpan={8}><div className="h-4 bg-slate-800 rounded w-full"></div></td>
                 </tr>
               ))
             ) : tenders.length > 0 ? (
@@ -115,6 +116,11 @@ export default function TendersPage() {
                         </span>
                       </div>
                     </td>
+                    <td className="px-6 py-4">
+                      <div className="text-[10px] text-slate-400 font-medium max-w-[200px] truncate" title={tender.budget?.description}>
+                        {(tender.budget?.description || '').replace(/^\[EMPRESA: .*?\]\n\n/, '') || '---'}
+                      </div>
+                    </td>
                     <td className="px-6 py-4 font-mono text-xs text-slate-400">
                       {formatCurrency(tender.budget?.amount || 0)}
                     </td>
@@ -140,7 +146,7 @@ export default function TendersPage() {
                 );
               })
             ) : (
-              <tr><td colSpan={6} className="py-20 text-center text-slate-500 italic font-bold">No hay licitaciones registradas.</td></tr>
+              <tr><td colSpan={8} className="py-20 text-center text-slate-500 italic font-bold">No hay licitaciones registradas.</td></tr>
             )}
           </tbody>
         </table>
