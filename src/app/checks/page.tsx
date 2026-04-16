@@ -415,7 +415,7 @@ export default function ChecksPage() {
           setIsDetailsModalOpen(false);
           setSelectedCheck(null);
         }} 
-        title={<div className="flex items-center gap-2"><Info className="text-blue-400"/> Detalle Completo del Cheque</div>}
+        title="Detalle Completo del Cheque"
       >
         {selectedCheck && (
            <div className="space-y-6 text-slate-200 p-2">
