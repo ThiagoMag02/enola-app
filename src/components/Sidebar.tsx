@@ -11,6 +11,7 @@ import {
   FileText, 
   CreditCard, 
   CheckCircle,
+  Wallet,
   LogOut
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -24,6 +25,7 @@ const menuItems = [
   { name: 'OCs', icon: ShoppingCart, href: '/purchase-orders' },
   { name: 'Facturas', icon: FileText, href: '/invoices' },
   { name: 'Pagos', icon: CreditCard, href: '/payments' },
+  { name: 'Cheques', icon: Wallet, href: '/checks' },
   { name: 'Aprobaciones', icon: CheckCircle, href: '/approvals' },
 ];
 
