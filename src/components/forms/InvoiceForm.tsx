@@ -15,12 +15,18 @@ export const InvoiceForm = ({ initialData, onSuccess, onCancel }: InvoiceFormPro
   const [loading, setLoading] = useState(false);
   const [pos, setPos] = useState<any[]>([]);
   const [selectedPO, setSelectedPO] = useState<any>(null);
+  const getCurrentDate = () => {
+    const now = new Date();
+    const local = new Date(now.getTime() - (now.getTimezoneOffset() * 60000));
+    return local.toISOString().split('T')[0];
+  };
+
   const [formData, setFormData] = useState({
     purchase_order_id: initialData?.purchase_order_id || '',
     invoice_number: initialData?.invoice_number || '',
     amount: initialData?.amount || 0,
     status: initialData?.status || 'Pending',
-    date: initialData?.date?.split('T')[0] || new Date().toISOString().split('T')[0],
+    date: initialData?.date?.split('T')[0] || getCurrentDate(),
   });
 
   useEffect(() => {

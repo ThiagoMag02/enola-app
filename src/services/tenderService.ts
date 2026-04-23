@@ -15,7 +15,7 @@ export const tenderService = {
   async getAll() {
     const { data, error } = await supabase
       .from('tenders')
-      .select(`*, budget:budgets(*)`)
+      .select(`*, budget:budgets(*), purchase_orders(*)`)
       .order('tender_date', { ascending: false });
     if (error) throw error;
     return data;
@@ -24,7 +24,7 @@ export const tenderService = {
   async getById(id: string) {
     const { data, error } = await supabase
       .from('tenders')
-      .select(`*, budget:budgets(*)`)
+      .select(`*, budget:budgets(*), purchase_orders(*)`)
       .eq('id', id)
       .single();
     if (error) throw error;

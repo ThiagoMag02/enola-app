@@ -261,7 +261,7 @@ export default function BudgetsPage() {
                     </div>
                   </td>
                   <td className="px-6 py-4 font-mono text-xs text-slate-400 uppercase">
-                    {new Date(budget.date + (budget.date.includes('T') ? '' : 'T12:00:00Z')).toLocaleDateString()}
+                    {new Date(budget.date + (budget.date.includes('T') ? '' : 'T00:00:00')).toLocaleDateString('es-AR')}
                   </td>
                   <td className="px-6 py-4 font-mono font-bold text-white text-sm">
                     {formatCurrency(budget.amount)}

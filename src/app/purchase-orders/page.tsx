@@ -89,7 +89,7 @@ export default function PurchaseOrdersPage() {
                     <td className="px-6 py-4">
                       <div className="text-sm font-black text-white group-hover:text-blue-400 transition-colors">{po.po_number || '---'}</div>
                       <div className="text-[10px] text-slate-500 mt-0.5 font-bold uppercase tracking-tighter">
-                        {new Date(po.date).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        {new Date(po.date + 'T00:00:00').toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' })}
                       </div>
                     </td>
                     <td className="px-6 py-4">

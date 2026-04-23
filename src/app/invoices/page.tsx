@@ -129,7 +129,7 @@ export default function InvoicesPage() {
                           <tr key={inv.id} className="hover:bg-slate-800/30 transition-colors group">
                             <td className="px-6 py-4">
                               <div className="text-sm font-black text-white group-hover:text-indigo-400 transition-colors">{inv.invoice_number}</div>
-                              <div className="text-[10px] text-slate-500 mt-0.5 font-bold">{new Date(inv.date).toLocaleDateString()}</div>
+                              <div className="text-[10px] text-slate-500 mt-0.5 font-bold">{new Date(inv.date + 'T00:00:00').toLocaleDateString('es-AR')}</div>
                             </td>
                             <td className="px-6 py-4 font-mono text-xs text-slate-400">
                               {formatCurrency(inv.amount)}

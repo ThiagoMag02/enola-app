@@ -86,7 +86,7 @@ export default function PaymentsPage() {
                 <div className="text-right">
                   <p className="text-2xl font-black text-white">$ {new Intl.NumberFormat().format(p.amount)}</p>
                   <div className="flex items-center gap-1.5 justify-end text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">
-                   <Calendar size={12} /> {new Date(p.date).toLocaleDateString()}
+                   <Calendar size={12} /> {new Date(p.date + 'T00:00:00').toLocaleDateString('es-AR')}
                   </div>
                 </div>
               </div>

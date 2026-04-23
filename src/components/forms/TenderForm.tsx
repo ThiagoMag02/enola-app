@@ -15,12 +15,18 @@ export const TenderForm = ({ initialData, onSuccess, onCancel }: TenderFormProps
   const [loading, setLoading] = useState(false);
   const [budgets, setBudgets] = useState<any[]>([]);
   const [selectedBudget, setSelectedBudget] = useState<any>(null);
+  const getCurrentDate = () => {
+    const now = new Date();
+    const local = new Date(now.getTime() - (now.getTimezoneOffset() * 60000));
+    return local.toISOString().split('T')[0];
+  };
+
   const [formData, setFormData] = useState({
     budget_id: initialData?.budget_id || '',
     tender_number: initialData?.tender_number || '',
     offer_amount: initialData?.offer_amount || 0,
     file_number: initialData?.file_number || '',
-    tender_date: initialData?.tender_date?.split('T')[0] || new Date().toISOString().split('T')[0],
+    tender_date: initialData?.tender_date?.split('T')[0] || getCurrentDate(),
   });
 
   useEffect(() => {

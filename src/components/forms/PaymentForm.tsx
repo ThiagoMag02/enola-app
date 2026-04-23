@@ -15,11 +15,17 @@ export const PaymentForm = ({ initialData, onSuccess, onCancel }: PaymentFormPro
   const [loading, setLoading] = useState(false);
   const [invoices, setInvoices] = useState<any[]>([]);
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
+  const getCurrentDate = () => {
+    const now = new Date();
+    const local = new Date(now.getTime() - (now.getTimezoneOffset() * 60000));
+    return local.toISOString().split('T')[0];
+  };
+
   const [formData, setFormData] = useState({
     invoice_id: initialData?.invoice_id || '',
     amount: initialData?.amount || 0,
     method: initialData?.method || 'Transfer',
-    date: initialData?.date?.split('T')[0] || new Date().toISOString().split('T')[0],
+    date: initialData?.date?.split('T')[0] || getCurrentDate(),
   });
 
   useEffect(() => {

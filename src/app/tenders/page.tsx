@@ -80,6 +80,7 @@ export default function TendersPage() {
               <th className="px-6 py-4">Descripción</th>
               <th className="px-6 py-4">Monto Presupuesto</th>
               <th className="px-6 py-4">Monto Ofertado</th>
+              <th className="px-6 py-4">OC</th>
               <th className="px-6 py-4">Diferencia (%)</th>
               <th className="px-6 py-4 text-right">Acciones</th>
             </tr>
@@ -88,19 +89,21 @@ export default function TendersPage() {
             {loading ? (
               Array(3).fill(0).map((_, i) => (
                 <tr key={i} className="animate-pulse">
-                  <td className="px-6 py-6" colSpan={8}><div className="h-4 bg-slate-800 rounded w-full"></div></td>
+                  <td className="px-6 py-6" colSpan={9}><div className="h-4 bg-slate-800 rounded w-full"></div></td>
                 </tr>
               ))
             ) : tenders.length > 0 ? (
               tenders.map((tender) => {
                 const diff = calculateDiff(tender.offer_amount, tender.budget?.amount);
                 const isOver = diff >= 0;
+                const linkedOC = tender.purchase_orders?.[0];
+                const ocDate = linkedOC ? new Date(linkedOC.date + 'T00:00:00').toLocaleDateString('es-AR') : null;
 
                 return (
                   <tr key={tender.id} className="hover:bg-slate-800/30 transition-colors group">
                     <td className="px-6 py-4">
                       <div className="text-sm font-black text-white group-hover:text-blue-400 transition-colors">{tender.tender_number}</div>
-                      <div className="text-[10px] text-slate-500 mt-0.5 font-bold">FECHA: {new Date(tender.tender_date).toLocaleDateString()}</div>
+                      <div className="text-[10px] text-slate-500 mt-0.5 font-bold">FECHA: {new Date(tender.tender_date + 'T00:00:00').toLocaleDateString('es-AR')}</div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-col">
@@ -128,6 +131,16 @@ export default function TendersPage() {
                       {formatCurrency(tender.offer_amount)}
                     </td>
                     <td className="px-6 py-4">
+                      {ocDate ? (
+                        <div className="flex flex-col">
+                          <span className="text-[10px] font-black text-blue-400">#{linkedOC.po_number}</span>
+                          <span className="text-[10px] font-bold text-slate-400">{ocDate}</span>
+                        </div>
+                      ) : (
+                        <span className="text-[10px] font-black text-rose-500 bg-rose-500/10 px-2 py-0.5 rounded-md border border-rose-500/20">FALTA</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
                       <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full w-fit font-black text-[10px] ${isOver ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}`}>
                         {isOver ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
                         {diff.toFixed(2)}%
@@ -146,7 +159,7 @@ export default function TendersPage() {
                 );
               })
             ) : (
-              <tr><td colSpan={8} className="py-20 text-center text-slate-500 italic font-bold">No hay licitaciones registradas.</td></tr>
+              <tr><td colSpan={9} className="py-20 text-center text-slate-500 italic font-bold">No hay licitaciones registradas.</td></tr>
             )}
           </tbody>
         </table>

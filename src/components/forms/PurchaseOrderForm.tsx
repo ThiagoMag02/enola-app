@@ -14,6 +14,12 @@ interface PurchaseOrderFormProps {
 export const PurchaseOrderForm = ({ initialData, onSuccess, onCancel }: PurchaseOrderFormProps) => {
   const [loading, setLoading] = useState(false);
   const [tenders, setTenders] = useState<Tender[]>([]);
+  const getCurrentDate = () => {
+    const now = new Date();
+    const local = new Date(now.getTime() - (now.getTimezoneOffset() * 60000));
+    return local.toISOString().split('T')[0];
+  };
+
   const [formData, setFormData] = useState({
     tender_id: initialData?.tender_id || '',
     po_number: initialData?.po_number || '',
@@ -21,7 +27,7 @@ export const PurchaseOrderForm = ({ initialData, onSuccess, onCancel }: Purchase
     description: initialData?.description || '',
     file_number: initialData?.file_number || '',
     status: (initialData?.status as PurchaseOrderStatus) || 'Pending',
-    date: initialData?.date?.split('T')[0] || new Date().toISOString().split('T')[0],
+    date: initialData?.date?.split('T')[0] || getCurrentDate(),
   });
 
   useEffect(() => {
