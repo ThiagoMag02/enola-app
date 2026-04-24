@@ -7,6 +7,7 @@ import { entityService } from '@/services/entityService';
 import { Modal } from '@/components/ui/Modal';
 import { BudgetForm } from '@/components/forms/BudgetForm';
 import { ActionsMenu } from '@/components/ui/ActionsMenu';
+import { formatDateLocal } from '@/lib/utils';
 import { 
   Receipt, 
   Search, 
@@ -261,7 +262,7 @@ export default function BudgetsPage() {
                     </div>
                   </td>
                   <td className="px-6 py-4 font-mono text-xs text-slate-400 uppercase">
-                    {new Date(budget.date + (budget.date.includes('T') ? '' : 'T00:00:00')).toLocaleDateString('es-AR')}
+                    {formatDateLocal(budget.date)}
                   </td>
                   <td className="px-6 py-4 font-mono font-bold text-white text-sm">
                     {formatCurrency(budget.amount)}

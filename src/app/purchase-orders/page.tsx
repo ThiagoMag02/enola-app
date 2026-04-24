@@ -5,6 +5,7 @@ import { purchaseOrderService } from '@/services/purchaseOrderService';
 import { Modal } from '@/components/ui/Modal';
 import { PurchaseOrderForm } from '@/components/forms/PurchaseOrderForm';
 import { ActionsMenu } from '@/components/ui/ActionsMenu';
+import { formatDateLocal } from '@/lib/utils';
 import { 
   ShoppingCart, 
   Plus, 
@@ -89,7 +90,7 @@ export default function PurchaseOrdersPage() {
                     <td className="px-6 py-4">
                       <div className="text-sm font-black text-white group-hover:text-blue-400 transition-colors">{po.po_number || '---'}</div>
                       <div className="text-[10px] text-slate-500 mt-0.5 font-bold uppercase tracking-tighter">
-                        {new Date(po.date + 'T00:00:00').toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        {formatDateLocal(po.date, { day: '2-digit', month: 'short', year: 'numeric' })}
                       </div>
                     </td>
                     <td className="px-6 py-4">

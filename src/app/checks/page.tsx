@@ -6,6 +6,7 @@ import { entityService, Entity } from '@/services/entityService';
 import { Modal } from '@/components/ui/Modal';
 import { CheckForm } from '@/components/forms/CheckForm';
 import { ActionsMenu } from '@/components/ui/ActionsMenu';
+import { formatDateLocal } from '@/lib/utils';
 import { 
   Plus, 
   Wallet,
@@ -126,7 +127,8 @@ export default function ChecksPage() {
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const dueDate = new Date(check.due_date + 'T00:00:00'); // Ensure it parses as local without timezone offset issues if possible, or UTC as UTC
+    const dueDateStr = check.due_date.split('T')[0];
+    const dueDate = new Date(dueDateStr + 'T00:00:00'); // Ensure it parses as local without timezone offset issues if possible, or UTC as UTC
     
     // Convert to UTC ms to compare correctly ignoring timezone of the string if it's YYYY-MM-DD
     const diffTime = dueDate.getTime() - today.getTime();
@@ -143,7 +145,8 @@ export default function ChecksPage() {
   const getStatusBadge = (check: Check) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const dueDate = new Date(check.due_date + 'T00:00:00');
+    const dueDateStr = check.due_date.split('T')[0];
+    const dueDate = new Date(dueDateStr + 'T00:00:00');
     
     if (check.status === 'Pagado') {
       return (
@@ -299,14 +302,14 @@ export default function ChecksPage() {
                   {/* Vencimiento */}
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors">
-                      {new Date(check.due_date + 'T00:00:00').toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                      {formatDateLocal(check.due_date, { day: '2-digit', month: 'short', year: 'numeric' })}
                     </div>
                   </td>
 
                   {/* Emisión */}
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-xs text-slate-500 font-medium">
-                      {new Date(check.issue_date + 'T00:00:00').toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                      {formatDateLocal(check.issue_date, { day: '2-digit', month: 'short', year: 'numeric' })}
                     </div>
                   </td>
 
@@ -434,13 +437,13 @@ export default function ChecksPage() {
                <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-800">
                  <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-1">Fecha Emisión</p>
                  <p className="font-bold">
-                    {new Date(selectedCheck.issue_date + 'T00:00:00').toLocaleDateString('es-AR')}
+                    {formatDateLocal(selectedCheck.issue_date)}
                  </p>
                </div>
                <div className="bg-slate-900/50 p-4 rounded-xl border border-rose-900/30">
                  <p className="text-[10px] text-rose-500/70 font-black uppercase tracking-widest mb-1">Fecha Vencimiento</p>
                  <p className="font-bold text-rose-400">
-                    {new Date(selectedCheck.due_date + 'T00:00:00').toLocaleDateString('es-AR')}
+                    {formatDateLocal(selectedCheck.due_date)}
                  </p>
                </div>
              </div>

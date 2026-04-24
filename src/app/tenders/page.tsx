@@ -5,6 +5,7 @@ import { tenderService } from '@/services/tenderService';
 import { Modal } from '@/components/ui/Modal';
 import { TenderForm } from '@/components/forms/TenderForm';
 import { ActionsMenu } from '@/components/ui/ActionsMenu';
+import { formatDateLocal } from '@/lib/utils';
 import { 
   Gavel, 
   Search, 
@@ -97,13 +98,13 @@ export default function TendersPage() {
                 const diff = calculateDiff(tender.offer_amount, tender.budget?.amount);
                 const isOver = diff >= 0;
                 const linkedOC = tender.purchase_orders?.[0];
-                const ocDate = linkedOC ? new Date(linkedOC.date + 'T00:00:00').toLocaleDateString('es-AR') : null;
+                const ocDate = linkedOC ? formatDateLocal(linkedOC.date) : null;
 
                 return (
                   <tr key={tender.id} className="hover:bg-slate-800/30 transition-colors group">
                     <td className="px-6 py-4">
                       <div className="text-sm font-black text-white group-hover:text-blue-400 transition-colors">{tender.tender_number}</div>
-                      <div className="text-[10px] text-slate-500 mt-0.5 font-bold">FECHA: {new Date(tender.tender_date + 'T00:00:00').toLocaleDateString('es-AR')}</div>
+                      <div className="text-[10px] text-slate-500 mt-0.5 font-bold">FECHA: {formatDateLocal(tender.tender_date)}</div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-col">
