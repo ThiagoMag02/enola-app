@@ -8,6 +8,7 @@ import { Modal } from '@/components/ui/Modal';
 import { BudgetForm } from '@/components/forms/BudgetForm';
 import { ActionsMenu } from '@/components/ui/ActionsMenu';
 import { formatDateLocal } from '@/lib/utils';
+import { exportToPdf, fmtCurrency, fmtDate, fmtStatus } from '@/lib/pdfExport';
 import { 
   Receipt, 
   Search, 
@@ -20,7 +21,8 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
-  Filter
+  Filter,
+  FileDown
 } from 'lucide-react';
 
 const RUBROS = [
@@ -135,15 +137,51 @@ export default function BudgetsPage() {
           </h2>
           <p className="text-slate-400 mt-1 uppercase tracking-widest text-[10px] font-black">Control y gestión de ofertas presupuestarias.</p>
         </div>
-        <button 
-          onClick={() => {
-            setEditingBudget(null);
-            setIsModalOpen(true);
-          }}
-          className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-bold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-emerald-600/20"
-        >
-          <Plus size={20} /> Nuevo Presupuesto
-        </button>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => {
+              const statusMap: Record<string, string> = { Approved: 'Aprobado', Rejected: 'Rechazado', Draft: 'Borrador' };
+              exportToPdf({
+                title: 'Presupuestos',
+                subtitle: 'Listado de presupuestos con estado de aprobación',
+                fileName: `presupuestos_${new Date().toISOString().split('T')[0]}`,
+                columns: [
+                  { header: 'ID', dataKey: 'custom_id' },
+                  { header: 'Rubro', dataKey: 'rubro' },
+                  { header: 'Entidad', dataKey: 'entity_name' },
+                  { header: 'Fecha', dataKey: 'date' },
+                  { header: 'Monto', dataKey: 'amount', align: 'right' },
+                  { header: 'Descripción', dataKey: 'description' },
+                  { header: 'Estado', dataKey: 'status', align: 'center' },
+                  { header: 'Expediente', dataKey: 'file_number' },
+                ],
+                data: filteredBudgets.map((b: any) => ({
+                  custom_id: `#${b.custom_id || b.id?.slice(0, 5)}`,
+                  rubro: b.rubro || '---',
+                  entity_name: b.entity?.business_name || 'Sin asignar',
+                  date: fmtDate(b.date),
+                  amount: fmtCurrency(b.amount),
+                  description: (b.description || '').replace(/^\[EMPRESA: .*?\]\n\n/, '').slice(0, 80) || '---',
+                  status: fmtStatus(b.status, statusMap),
+                  file_number: b.approvals?.[0]?.file_number || '---',
+                })),
+              });
+            }}
+            className="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 text-white px-4 py-2.5 rounded-xl font-bold transition-all hover:scale-105 shadow-lg"
+            title="Exportar datos filtrados a PDF"
+          >
+            <FileDown size={18} /> PDF
+          </button>
+          <button 
+            onClick={() => {
+              setEditingBudget(null);
+              setIsModalOpen(true);
+            }}
+            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-bold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-emerald-600/20"
+          >
+            <Plus size={20} /> Nuevo Presupuesto
+          </button>
+        </div>
       </header>
 
       <div className="space-y-4">

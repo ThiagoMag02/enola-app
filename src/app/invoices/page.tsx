@@ -14,8 +14,10 @@ import {
   ShoppingCart,
   TrendingUp,
   AlertCircle,
-  Plus
+  Plus,
+  FileDown
 } from 'lucide-react';
+import { exportToPdf, fmtCurrency, fmtDate } from '@/lib/pdfExport';
 
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<any[]>([]);
@@ -70,15 +72,53 @@ export default function InvoicesPage() {
           </h2>
           <p className="text-indigo-200/60 mt-1 uppercase tracking-tighter font-bold text-xs">Control de saldos por OC y seguimiento de pagos.</p>
         </div>
-        <button
-          onClick={() => {
-            setEditingInvoice(null);
-            setIsModalOpen(true);
-          }}
-          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl font-bold transition-all hover:scale-105 shadow-lg shadow-indigo-600/20"
-        >
-          <Plus size={20} /> Registrar Factura
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => {
+              exportToPdf({
+                title: 'Facturación y Cobros',
+                subtitle: 'Listado de facturas emitidas y saldos pendientes por OC',
+                fileName: `facturas_${new Date().toISOString().split('T')[0]}`,
+                columns: [
+                  { header: 'N° Factura', dataKey: 'invoice_number' },
+                  { header: 'Fecha', dataKey: 'date' },
+                  { header: 'OC Relacionada', dataKey: 'po_info' },
+                  { header: 'Importe', dataKey: 'amount', align: 'right' },
+                  { header: 'Pagado', dataKey: 'paid', align: 'right' },
+                  { header: 'Pendiente', dataKey: 'remaining', align: 'right' },
+                  { header: 'Estado', dataKey: 'status', align: 'center' },
+                ],
+                data: invoices.map((inv: any) => {
+                  const paid = (inv.payments || []).reduce((acc: number, curr: any) => acc + Number(curr.amount || 0), 0);
+                  const remaining = inv.amount - paid;
+                  const isPaid = remaining <= 0;
+                  return {
+                    invoice_number: inv.invoice_number,
+                    date: fmtDate(inv.date),
+                    po_info: inv.purchase_order ? `OC: ${inv.purchase_order.po_number}` : 'DIRECTA',
+                    amount: fmtCurrency(inv.amount),
+                    paid: fmtCurrency(paid),
+                    remaining: isPaid ? 'LIQUIDADA' : fmtCurrency(remaining),
+                    status: isPaid ? 'Pagada' : 'Pendiente',
+                  };
+                }),
+              });
+            }}
+            className="flex items-center gap-2 bg-indigo-700 hover:bg-indigo-600 text-white px-4 py-2.5 rounded-xl font-bold transition-all hover:scale-105 shadow-lg"
+            title="Exportar a PDF"
+          >
+            <FileDown size={18} /> PDF
+          </button>
+          <button
+            onClick={() => {
+              setEditingInvoice(null);
+              setIsModalOpen(true);
+            }}
+            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl font-bold transition-all hover:scale-105 shadow-lg shadow-indigo-600/20"
+          >
+            <Plus size={20} /> Registrar Factura
+          </button>
+        </div>
       </header>
 
       <div className="space-y-12">

@@ -7,6 +7,7 @@ import { Modal } from '@/components/ui/Modal';
 import { CheckForm } from '@/components/forms/CheckForm';
 import { ActionsMenu } from '@/components/ui/ActionsMenu';
 import { formatDateLocal } from '@/lib/utils';
+import { exportToPdf, fmtCurrency, fmtDate } from '@/lib/pdfExport';
 import { 
   Plus, 
   Wallet,
@@ -17,7 +18,8 @@ import {
   Calendar,
   Filter,
   Eye,
-  Info
+  Info,
+  FileDown
 } from 'lucide-react';
 
 export default function ChecksPage() {
@@ -189,15 +191,55 @@ export default function ChecksPage() {
           </h2>
           <p className="text-slate-400 mt-1 uppercase tracking-widest text-[10px] font-black">Gestión de emisión, pagos y acumulado de deuda pendiente.</p>
         </div>
-        <button 
-          onClick={() => {
-            setSelectedCheck(null);
-            setIsFormModalOpen(true);
-          }}
-          className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-bold transition-all hover:scale-105 shadow-lg shadow-emerald-600/20"
-        >
-          <Plus size={20} /> Agregar Cheque
-        </button>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => {
+              exportToPdf({
+                title: 'Cartera de Cheques',
+                subtitle: 'Detalle de cheques emitidos con acumulado de deuda pendiente',
+                fileName: `cheques_${new Date().toISOString().split('T')[0]}`,
+                summaryCards: [
+                  { label: 'Total Pendiente', value: fmtCurrency(totalPending), color: 'rose' },
+                  { label: 'Total Pagado', value: fmtCurrency(totalPaid), color: 'emerald' },
+                  { label: 'Cantidad', value: `${filteredChecks.length} cheques`, color: 'blue' },
+                ],
+                columns: [
+                  { header: 'Vencimiento', dataKey: 'due_date' },
+                  { header: 'Emisión', dataKey: 'issue_date' },
+                  { header: 'N° Cheque', dataKey: 'check_number' },
+                  { header: 'Empresa', dataKey: 'provider_name' },
+                  { header: 'Importe', dataKey: 'amount', align: 'right' },
+                  { header: 'Acumulado', dataKey: 'accumulated', align: 'right' },
+                  { header: 'Estado', dataKey: 'status', align: 'center' },
+                  { header: 'Observaciones', dataKey: 'observations' },
+                ],
+                data: filteredChecks.map((c: any) => ({
+                  due_date: fmtDate(c.due_date),
+                  issue_date: fmtDate(c.issue_date),
+                  check_number: c.check_number,
+                  provider_name: c.provider?.business_name || 'Desconocido',
+                  amount: fmtCurrency(c.amount),
+                  accumulated: c.status === 'Pendiente' ? fmtCurrency(c.accumulated) : '-',
+                  status: c.status,
+                  observations: c.observations || '',
+                })),
+              });
+            }}
+            className="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 text-white px-4 py-2.5 rounded-xl font-bold transition-all hover:scale-105 shadow-lg"
+            title="Exportar datos filtrados a PDF"
+          >
+            <FileDown size={18} /> PDF
+          </button>
+          <button 
+            onClick={() => {
+              setSelectedCheck(null);
+              setIsFormModalOpen(true);
+            }}
+            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-bold transition-all hover:scale-105 shadow-lg shadow-emerald-600/20"
+          >
+            <Plus size={20} /> Agregar Cheque
+          </button>
+        </div>
       </header>
 
       {/* KPI Cards and Filters Section */}

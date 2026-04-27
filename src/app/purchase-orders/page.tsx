@@ -6,13 +6,15 @@ import { Modal } from '@/components/ui/Modal';
 import { PurchaseOrderForm } from '@/components/forms/PurchaseOrderForm';
 import { ActionsMenu } from '@/components/ui/ActionsMenu';
 import { formatDateLocal } from '@/lib/utils';
+import { exportToPdf, fmtCurrency, fmtDate, fmtStatus } from '@/lib/pdfExport';
 import { 
   ShoppingCart, 
   Plus, 
   Clock,
   CheckCircle2,
   AlertCircle,
-  FileText
+  FileText,
+  FileDown
 } from 'lucide-react';
 
 export default function PurchaseOrdersPage() {
@@ -51,15 +53,52 @@ export default function PurchaseOrdersPage() {
           </h2>
           <p className="text-slate-400 mt-1 uppercase tracking-widest text-[10px] font-black">Gestión de suministros y vinculación con expedientes.</p>
         </div>
-        <button 
-          onClick={() => {
-            setEditingPO(null);
-            setIsModalOpen(true);
-          }}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl font-bold transition-all hover:scale-105 shadow-lg shadow-blue-600/20"
-        >
-          <Plus size={20} /> Nueva OC
-        </button>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => {
+              const statusMap: Record<string, string> = { Billed: 'Completado', Partial: 'Parcial', Pending: 'Pendiente' };
+              exportToPdf({
+                title: 'Órdenes de Compra',
+                subtitle: 'Gestión de suministros y vinculación con expedientes',
+                fileName: `ordenes_compra_${new Date().toISOString().split('T')[0]}`,
+                columns: [
+                  { header: 'N° Orden', dataKey: 'po_number' },
+                  { header: 'Fecha', dataKey: 'date' },
+                  { header: 'Expediente', dataKey: 'file_number' },
+                  { header: 'Licitación', dataKey: 'tender_info' },
+                  { header: 'Descripción', dataKey: 'description' },
+                  { header: 'Importe', dataKey: 'amount', align: 'right' },
+                  { header: 'Estado', dataKey: 'status', align: 'center' },
+                ],
+                data: pos.map((po: any) => {
+                  const desc = po.tender?.budget?.description || po.approval?.budget?.description || '';
+                  return {
+                    po_number: po.po_number || '---',
+                    date: fmtDate(po.date),
+                    file_number: po.tender?.file_number || 'S/N',
+                    tender_info: po.tender ? `LIC: ${po.tender.tender_number}` : 'DIRECTA',
+                    description: desc.replace(/^\[EMPRESA: .*?\]\n\n/, '').slice(0, 80) || '---',
+                    amount: fmtCurrency(po.amount),
+                    status: fmtStatus(po.status, statusMap),
+                  };
+                }),
+              });
+            }}
+            className="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 text-white px-4 py-2.5 rounded-xl font-bold transition-all hover:scale-105 shadow-lg"
+            title="Exportar a PDF"
+          >
+            <FileDown size={18} /> PDF
+          </button>
+          <button 
+            onClick={() => {
+              setEditingPO(null);
+              setIsModalOpen(true);
+            }}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl font-bold transition-all hover:scale-105 shadow-lg shadow-blue-600/20"
+          >
+            <Plus size={20} /> Nueva OC
+          </button>
+        </div>
       </header>
 
       <div className="bg-slate-900/40 rounded-3xl border border-slate-800 shadow-2xl relative min-h-[300px] overflow-x-auto">

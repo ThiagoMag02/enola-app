@@ -13,8 +13,10 @@ import {
   TrendingDown,
   FileText,
   CheckCircle2,
-  Calendar
+  Calendar,
+  FileDown
 } from 'lucide-react';
+import { exportToPdf, fmtCurrency, fmtDate } from '@/lib/pdfExport';
 
 export default function PaymentsPage() {
   const [payments, setPayments] = useState<any[]>([]);
@@ -52,15 +54,42 @@ export default function PaymentsPage() {
           </h2>
           <p className="text-slate-400 mt-1 uppercase tracking-widest text-[10px] font-black">Registro de transacciones monetarias.</p>
         </div>
-        <button 
-          onClick={() => {
-            setEditingPayment(null);
-            setIsModalOpen(true);
-          }}
-          className="flex items-center gap-2 bg-purple-600 hover:bg-purple-500 text-white px-5 py-2.5 rounded-xl font-bold transition-all hover:scale-105 shadow-lg shadow-purple-600/20"
-        >
-          <Plus size={20} /> Nuevo Pago
-        </button>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => {
+              exportToPdf({
+                title: 'Registro de Pagos',
+                subtitle: 'Historial de transacciones monetarias realizadas',
+                fileName: `pagos_${new Date().toISOString().split('T')[0]}`,
+                columns: [
+                  { header: 'Fecha', dataKey: 'date' },
+                  { header: 'Método', dataKey: 'method' },
+                  { header: 'Importe', dataKey: 'amount', align: 'right' },
+                  { header: 'Factura Ref', dataKey: 'invoice_ref' },
+                ],
+                data: payments.map((p: any) => ({
+                  date: fmtDate(p.date),
+                  method: p.method,
+                  amount: fmtCurrency(p.amount),
+                  invoice_ref: p.invoice_id?.slice(0, 8) || '---',
+                })),
+              });
+            }}
+            className="flex items-center gap-2 bg-purple-700 hover:bg-purple-600 text-white px-4 py-2.5 rounded-xl font-bold transition-all hover:scale-105 shadow-lg"
+            title="Exportar a PDF"
+          >
+            <FileDown size={18} /> PDF
+          </button>
+          <button 
+            onClick={() => {
+              setEditingPayment(null);
+              setIsModalOpen(true);
+            }}
+            className="flex items-center gap-2 bg-purple-600 hover:bg-purple-500 text-white px-5 py-2.5 rounded-xl font-bold transition-all hover:scale-105 shadow-lg shadow-purple-600/20"
+          >
+            <Plus size={20} /> Nuevo Pago
+          </button>
+        </div>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

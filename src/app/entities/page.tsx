@@ -13,8 +13,10 @@ import {
   Mail,
   Phone,
   Building2,
-  Pencil
+  Pencil,
+  FileDown
 } from 'lucide-react';
+import { exportToPdf } from '@/lib/pdfExport';
 
 export default function EntitiesPage() {
   const [entities, setEntities] = useState<Entity[]>([]);
@@ -61,15 +63,46 @@ export default function EntitiesPage() {
           </h2>
           <p className="text-slate-400 mt-1">Gestión de Clientes y Proveedores del sistema.</p>
         </div>
-        <button 
-          onClick={() => {
-            setEditingEntity(null);
-            setIsModalOpen(true);
-          }}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl font-bold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-blue-600/20"
-        >
-          <Plus size={20} /> Nueva Entidad
-        </button>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => {
+              exportToPdf({
+                title: 'Listado de Entidades',
+                subtitle: 'Clientes y proveedores registrados en el sistema',
+                fileName: `entidades_${new Date().toISOString().split('T')[0]}`,
+                columns: [
+                  { header: 'Razón Social', dataKey: 'business_name' },
+                  { header: 'Tipo', dataKey: 'type' },
+                  { header: 'CUIT', dataKey: 'cuit' },
+                  { header: 'Email', dataKey: 'email' },
+                  { header: 'Teléfono', dataKey: 'phone' },
+                  { header: 'Estado', dataKey: 'status' },
+                ],
+                data: filteredEntities.map((e: any) => ({
+                  business_name: e.business_name,
+                  type: e.type === 'Client' ? 'Cliente' : e.type === 'Provider' ? 'Proveedor' : 'Ambos',
+                  cuit: e.cuit,
+                  email: e.email || '---',
+                  phone: e.phone || '---',
+                  status: e.is_active ? 'Activo' : 'Inactivo',
+                })),
+              });
+            }}
+            className="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 text-white px-4 py-2.5 rounded-xl font-bold transition-all hover:scale-105 shadow-lg"
+            title="Exportar datos filtrados a PDF"
+          >
+            <FileDown size={18} /> PDF
+          </button>
+          <button 
+            onClick={() => {
+              setEditingEntity(null);
+              setIsModalOpen(true);
+            }}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl font-bold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-blue-600/20"
+          >
+            <Plus size={20} /> Nueva Entidad
+          </button>
+        </div>
       </header>
 
       <div className="relative">

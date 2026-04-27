@@ -6,6 +6,7 @@ import { Modal } from '@/components/ui/Modal';
 import { TenderForm } from '@/components/forms/TenderForm';
 import { ActionsMenu } from '@/components/ui/ActionsMenu';
 import { formatDateLocal } from '@/lib/utils';
+import { exportToPdf, fmtCurrency, fmtDate } from '@/lib/pdfExport';
 import { 
   Gavel, 
   Search, 
@@ -13,7 +14,8 @@ import {
   TrendingDown,
   TrendingUp,
   FileText,
-  DollarSign
+  DollarSign,
+  FileDown
 } from 'lucide-react';
 
 export default function TendersPage() {
@@ -61,15 +63,54 @@ export default function TendersPage() {
           </h2>
           <p className="text-slate-400 mt-1 uppercase tracking-widest text-[10px] font-black">Control de procesos de oferta y adjudicación respecto al presupuesto.</p>
         </div>
-        <button 
-          onClick={() => {
-            setEditingTender(null);
-            setIsModalOpen(true);
-          }}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl font-bold transition-all hover:scale-105 shadow-lg shadow-blue-600/20"
-        >
-          <Plus size={20} /> Nueva Licitación
-        </button>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => {
+              exportToPdf({
+                title: 'Licitaciones',
+                subtitle: 'Procesos de oferta y adjudicación respecto al presupuesto',
+                fileName: `licitaciones_${new Date().toISOString().split('T')[0]}`,
+                columns: [
+                  { header: 'N° Proceso', dataKey: 'tender_number' },
+                  { header: 'Fecha', dataKey: 'tender_date' },
+                  { header: 'Presupuesto Ref', dataKey: 'budget_ref' },
+                  { header: 'Expediente', dataKey: 'file_number' },
+                  { header: 'Monto Presupuesto', dataKey: 'budget_amount', align: 'right' },
+                  { header: 'Monto Ofertado', dataKey: 'offer_amount', align: 'right' },
+                  { header: 'OC', dataKey: 'oc_info' },
+                  { header: 'Diferencia %', dataKey: 'diff', align: 'right' },
+                ],
+                data: tenders.map((t: any) => {
+                  const diff = t.budget?.amount ? (((t.offer_amount - t.budget.amount) / t.budget.amount) * 100).toFixed(2) : '---';
+                  const linkedOC = t.purchase_orders?.[0];
+                  return {
+                    tender_number: t.tender_number,
+                    tender_date: fmtDate(t.tender_date),
+                    budget_ref: `#${t.budget?.custom_id || 'S/N'} - ${t.budget?.rubro || ''}`,
+                    file_number: t.file_number || 'No asignado',
+                    budget_amount: fmtCurrency(t.budget?.amount),
+                    offer_amount: fmtCurrency(t.offer_amount),
+                    oc_info: linkedOC ? `#${linkedOC.po_number}` : 'FALTA',
+                    diff: diff !== '---' ? `${diff}%` : '---',
+                  };
+                }),
+              });
+            }}
+            className="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 text-white px-4 py-2.5 rounded-xl font-bold transition-all hover:scale-105 shadow-lg"
+            title="Exportar a PDF"
+          >
+            <FileDown size={18} /> PDF
+          </button>
+          <button 
+            onClick={() => {
+              setEditingTender(null);
+              setIsModalOpen(true);
+            }}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl font-bold transition-all hover:scale-105 shadow-lg shadow-blue-600/20"
+          >
+            <Plus size={20} /> Nueva Licitación
+          </button>
+        </div>
       </header>
 
       <div className="bg-slate-900/40 rounded-3xl border border-slate-800 shadow-2xl relative min-h-[300px] overflow-x-auto">
