@@ -156,7 +156,7 @@ export default function TendersPage() {
                         <span className="text-[9px] text-slate-500 uppercase font-black tracking-tighter truncate max-w-[150px]">
                           {tender.budget?.rubro}
                         </span>
-                        <span className="text-[9px] text-slate-600 font-bold">
+                        <span className="text-[9px] text-amber-400 font-bold">
                           Expte: {tender.file_number || 'No asignado'}
                         </span>
                       </div>
