@@ -153,6 +153,7 @@ export default function BudgetsPage() {
                   { header: 'Monto', dataKey: 'amount', align: 'right' },
                   { header: 'Descripción', dataKey: 'description' },
                   { header: 'Estado', dataKey: 'status', align: 'center' },
+                  { header: 'Licitación', dataKey: 'tender_info' },
                   { header: 'Expediente', dataKey: 'file_number' },
                 ],
                 data: filteredBudgets.map((b: any) => ({
@@ -163,6 +164,7 @@ export default function BudgetsPage() {
                   amount: fmtCurrency(b.amount),
                   description: (b.description || '').replace(/^\[EMPRESA: .*?\]\n\n/, '').slice(0, 80) || '---',
                   status: fmtStatus(b.status, statusMap),
+                  tender_info: b.tenders?.[0] ? `#${b.tenders[0].tender_number}` : 'FALTA',
                   file_number: b.approvals?.[0]?.file_number || '---',
                 })),
               });
@@ -276,6 +278,7 @@ export default function BudgetsPage() {
               <th className="px-6 py-4">Fecha</th>
               <th className="px-6 py-4">Monto</th>
               <th className="px-6 py-4">Descripción</th>
+              <th className="px-6 py-4">Licitación</th>
               <th className="px-6 py-4">Estado / Expediente</th>
               <th className="px-6 py-4 text-right">Acciones</th>
             </tr>
@@ -284,7 +287,7 @@ export default function BudgetsPage() {
             {loading ? (
               Array(5).fill(0).map((_, i) => (
                 <tr key={i} className="animate-pulse">
-                  <td className="px-6 py-6" colSpan={7}><div className="h-4 bg-slate-800 rounded w-full"></div></td>
+                  <td className="px-6 py-6" colSpan={8}><div className="h-4 bg-slate-800 rounded w-full"></div></td>
                 </tr>
               ))
             ) : filteredBudgets.length > 0 ? (
@@ -310,6 +313,16 @@ export default function BudgetsPage() {
                     <div className="text-[10px] text-slate-400 font-medium max-w-[200px] truncate" title={budget.description}>
                         {(budget.description || '').replace(/^\[EMPRESA: .*?\]\n\n/, '') || '---'}
                     </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    {budget.tenders && budget.tenders.length > 0 ? (
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-black text-blue-400">#{budget.tenders[0].tender_number}</span>
+                        <span className="text-[9px] text-slate-500 font-bold uppercase">{formatDateLocal(budget.tenders[0].tender_date)}</span>
+                      </div>
+                    ) : (
+                      <span className="text-[10px] font-black text-rose-500 bg-rose-500/10 px-2 py-0.5 rounded-md border border-rose-500/20">FALTA</span>
+                    )}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex flex-col gap-1.5">
@@ -344,7 +357,7 @@ export default function BudgetsPage() {
               ))
             ) : (
                 <tr>
-                    <td colSpan={7} className="py-20 text-center text-slate-600 font-black uppercase tracking-widest text-xs italic">
+                    <td colSpan={8} className="py-20 text-center text-slate-600 font-black uppercase tracking-widest text-xs italic">
                         No se encontraron presupuestos.
                     </td>
                 </tr>

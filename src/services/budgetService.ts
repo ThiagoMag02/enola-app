@@ -28,7 +28,8 @@ export const budgetService = {
         *,
         entity:entities!entity_id(*),
         provider:entities!provider_id(*),
-        approvals(file_number)
+        approvals(file_number),
+        tenders(tender_number, tender_date)
       `)
       .order('date', { ascending: false });
     if (error) throw error;
@@ -42,7 +43,8 @@ export const budgetService = {
         *,
         entity:entities!entity_id(*),
         provider:entities!provider_id(*),
-        approvals(file_number)
+        approvals(file_number),
+        tenders(tender_number, tender_date)
       `)
       .eq('id', id)
       .single();
