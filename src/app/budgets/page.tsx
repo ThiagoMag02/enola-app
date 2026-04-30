@@ -123,7 +123,7 @@ export default function BudgetsPage() {
   });
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(amount);
+    return `$${new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount)}`;
   };
 
   const selectClass = "bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-xs font-bold text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 appearance-none cursor-pointer hover:border-slate-700 transition-all min-w-[150px]";

@@ -114,7 +114,7 @@ export default function PaymentsPage() {
                   />
                 </div>
                 <div className="text-right">
-                  <p className="text-2xl font-black text-white">$ {new Intl.NumberFormat().format(p.amount)}</p>
+                  <p className="text-2xl font-black text-white">$ {new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(p.amount)}</p>
                   <div className="flex items-center gap-1.5 justify-end text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">
                    <Calendar size={12} /> {formatDateLocal(p.date)}
                   </div>

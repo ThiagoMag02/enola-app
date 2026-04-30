@@ -149,7 +149,7 @@ export default function PurchaseOrdersPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 font-mono font-bold text-white text-sm">
-                      ${new Intl.NumberFormat('es-AR').format(po.amount)}
+                      ${new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(po.amount)}
                     </td>
                     <td className="px-6 py-4">
                       <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full w-fit ${

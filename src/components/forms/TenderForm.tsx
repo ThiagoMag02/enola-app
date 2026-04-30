@@ -147,7 +147,7 @@ export const TenderForm = ({ initialData, onSuccess, onCancel }: TenderFormProps
               <input
                 disabled
                 className={`${inputClass} !border-emerald-500/30 !bg-emerald-500/5 text-emerald-400 font-bold cursor-not-allowed`}
-                value={new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(selectedBudget.amount)}
+                value={`$${new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(selectedBudget.amount)}`}
               />
             </div>
           </div>

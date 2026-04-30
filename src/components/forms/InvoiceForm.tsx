@@ -93,7 +93,7 @@ export const InvoiceForm = ({ initialData, onSuccess, onCancel }: InvoiceFormPro
             >
               <option value="" disabled className="bg-slate-900">Seleccionar OC...</option>
               {pos.map(p => (
-                <option key={p.id} value={p.id} className="bg-slate-900">{p.po_number || p.id.slice(0,8)} - ${new Intl.NumberFormat().format(p.amount)}</option>
+                <option key={p.id} value={p.id} className="bg-slate-900">{p.po_number || p.id.slice(0,8)} - ${new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(p.amount)}</option>
               ))}
             </select>
           </div>
@@ -104,7 +104,7 @@ export const InvoiceForm = ({ initialData, onSuccess, onCancel }: InvoiceFormPro
               <span className="text-[10px] font-black uppercase text-blue-400 tracking-tighter">
                 Restante a Facturar: 
                 <span className="ml-2 text-sm font-mono text-white">
-                    ${new Intl.NumberFormat().format(remainingToInvoice)}
+                    ${new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(remainingToInvoice)}
                 </span>
               </span>
             </div>

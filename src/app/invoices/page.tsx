@@ -56,7 +56,7 @@ export default function InvoicesPage() {
   }, {});
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(amount);
+    return `$${new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount)}`;
   };
 
   const calculatePaid = (inv: any) => {

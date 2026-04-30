@@ -76,7 +76,7 @@ export const PaymentForm = ({ initialData, onSuccess, onCancel }: PaymentFormPro
   const labelClass = "block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1";
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(amount);
+    return `$${new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount)}`;
   };
 
   return (
@@ -95,7 +95,7 @@ export const PaymentForm = ({ initialData, onSuccess, onCancel }: PaymentFormPro
             >
               <option value="" disabled className="bg-slate-900">Seleccionar Factura...</option>
               {invoices.map(inv => (
-                <option key={inv.id} value={inv.id} className="bg-slate-900">{inv.invoice_number} - ${new Intl.NumberFormat().format(inv.amount)}</option>
+                <option key={inv.id} value={inv.id} className="bg-slate-900">{inv.invoice_number} - ${new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(inv.amount)}</option>
               ))}
             </select>
           </div>

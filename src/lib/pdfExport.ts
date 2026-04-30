@@ -201,7 +201,7 @@ export function fmtCurrency(amount: number | string | null | undefined): string 
   if (amount === null || amount === undefined) return '---';
   const num = typeof amount === 'string' ? parseFloat(amount) : amount;
   if (isNaN(num)) return '---';
-  return `$${new Intl.NumberFormat('es-AR').format(num)}`;
+  return `$${new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(num)}`;
 }
 
 export function fmtDate(dateString: string | null | undefined): string {

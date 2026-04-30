@@ -124,17 +124,18 @@ export default function ChecksPage() {
     };
   }, [checks, filterStartDate, filterEndDate, filterProviderId, filterStatus]);
 
-  const getRowClassName = (check: Check) => {
-    if (check.status === 'Pagado') return "opacity-60 saturate-50";
-
+  const calculateDiffDays = (dueDateStr: string) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const dueDateStr = check.due_date.split('T')[0];
-    const dueDate = new Date(dueDateStr + 'T00:00:00'); // Ensure it parses as local without timezone offset issues if possible, or UTC as UTC
-    
-    // Convert to UTC ms to compare correctly ignoring timezone of the string if it's YYYY-MM-DD
+    const datePart = dueDateStr.split('T')[0];
+    const dueDate = new Date(datePart + 'T00:00:00');
     const diffTime = dueDate.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  };
+
+  const getRowClassName = (check: Check) => {
+    if (check.status === 'Pagado') return "opacity-60 saturate-50";
+    const diffDays = calculateDiffDays(check.due_date);
 
     if (diffDays < 0) {
       return "bg-rose-950/20"; // Vencido
@@ -145,11 +146,6 @@ export default function ChecksPage() {
   };
 
   const getStatusBadge = (check: Check) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const dueDateStr = check.due_date.split('T')[0];
-    const dueDate = new Date(dueDateStr + 'T00:00:00');
-    
     if (check.status === 'Pagado') {
       return (
         <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
@@ -158,8 +154,7 @@ export default function ChecksPage() {
       );
     }
     
-    const diffTime = dueDate.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const diffDays = calculateDiffDays(check.due_date);
     
     if (diffDays < 0) {
       return (
@@ -167,10 +162,10 @@ export default function ChecksPage() {
           <AlertTriangle size={12} /> Vencido ({Math.abs(diffDays)}d)
         </span>
       );
-    } else if (diffDays <= 7) {
+    } else if (diffDays <= 15) {
       return (
          <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-md bg-amber-500/10 text-amber-400 border border-amber-500/20">
-          <AlertCircle size={12} /> en {diffDays} días
+          <AlertCircle size={12} /> EN {diffDays} DÍAS
         </span>
       );
     }
@@ -251,7 +246,7 @@ export default function ChecksPage() {
             <AlertCircle size={14} /> Total Pendiente
           </div>
           <div className="text-3xl font-bold text-white tracking-tighter">
-            ${new Intl.NumberFormat('es-AR').format(totalPending)}
+            ${new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(totalPending)}
           </div>
         </div>
 
@@ -261,7 +256,7 @@ export default function ChecksPage() {
             <CheckCircle2 size={14} /> Total Pagado
           </div>
           <div className="text-3xl font-bold text-white tracking-tighter">
-            ${new Intl.NumberFormat('es-AR').format(totalPaid)}
+            ${new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(totalPaid)}
           </div>
         </div>
 
@@ -375,14 +370,14 @@ export default function ChecksPage() {
                   {/* Importe */}
                   <td className="px-6 py-4 text-right whitespace-nowrap">
                     <div className={`font-mono font-bold text-sm ${check.status === 'Pendiente' ? 'text-white' : 'text-slate-500 line-through decoration-slate-600'}`}>
-                      ${new Intl.NumberFormat('es-AR').format(check.amount)}
+                      ${new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(check.amount)}
                     </div>
                   </td>
 
                   {/* Acumulado */}
                   <td className="px-6 py-4 text-right whitespace-nowrap">
-                    <div className="font-mono font-black text-base text-rose-400/90 tracking-tighter">
-                      {check.status === 'Pendiente' ? `$${new Intl.NumberFormat('es-AR').format(check.accumulated)}` : '-'}
+                    <div className={`font-mono font-black text-base tracking-tighter ${check.status === 'Pendiente' && calculateDiffDays(check.due_date) <= 7 ? 'text-rose-400/90' : 'text-slate-200'}`}>
+                      {check.status === 'Pendiente' ? `$${new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(check.accumulated)}` : '-'}
                     </div>
                   </td>
 
@@ -474,7 +469,7 @@ export default function ChecksPage() {
                </div>
                <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-800">
                  <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-1">Importe</p>
-                 <p className="font-bold font-mono text-emerald-400">${new Intl.NumberFormat('es-AR').format(selectedCheck.amount)}</p>
+                 <p className="font-bold font-mono text-emerald-400">${new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(selectedCheck.amount)}</p>
                </div>
                <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-800">
                  <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-1">Fecha Emisión</p>
