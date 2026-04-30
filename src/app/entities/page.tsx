@@ -118,11 +118,11 @@ export default function EntitiesPage() {
         />
       </div>
 
-      <div className="bg-slate-900/40 rounded-3xl border border-slate-800 shadow-2xl relative min-h-[300px]">
-        <div className="overflow-visible">
+      <div className="bg-slate-900/40 rounded-3xl border border-slate-800 shadow-2xl relative min-h-[300px] overflow-hidden">
+        <div className="max-h-[600px] overflow-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-800/50 text-slate-400 text-xs uppercase tracking-widest font-bold">
+              <tr className="bg-slate-800 sticky top-0 z-20 text-slate-400 text-xs uppercase tracking-widest font-bold shadow-md">
                 <th className="px-6 py-4">Razón Social / ID</th>
                 <th className="px-6 py-4">Tipo</th>
                 <th className="px-6 py-4">CUIT</th>
@@ -205,10 +205,9 @@ export default function EntitiesPage() {
                   </td>
                 </tr>
               )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+          </tbody>
+        </table>
+      </div></div>
 
       <Modal 
         isOpen={isModalOpen} 

@@ -113,9 +113,10 @@ export default function TendersPage() {
         </div>
       </header>
 
-      <div className="bg-slate-900/40 rounded-3xl border border-slate-800 shadow-2xl relative min-h-[300px] overflow-x-auto">
-        <table className="w-full text-left border-collapse">
-          <thead className="bg-slate-800/50 text-slate-400 text-[10px] uppercase tracking-widest font-black">
+      <div className="bg-slate-900/40 rounded-3xl border border-slate-800 shadow-2xl relative min-h-[300px] overflow-hidden">
+        <div className="max-h-[600px] overflow-auto">
+          <table className="w-full text-left border-collapse">
+            <thead className="bg-slate-800 sticky top-0 z-20 text-slate-400 text-[10px] uppercase tracking-widest font-black shadow-md">
             <tr>
               <th className="px-6 py-4">Proceso / Ref</th>
               <th className="px-6 py-4">Presupuesto Referencia</th>
@@ -205,7 +206,7 @@ export default function TendersPage() {
             )}
           </tbody>
         </table>
-      </div>
+      </div></div>
 
       <Modal 
         isOpen={isModalOpen} 
