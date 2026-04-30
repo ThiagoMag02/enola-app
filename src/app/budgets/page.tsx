@@ -153,7 +153,7 @@ export default function BudgetsPage() {
                   { header: 'Monto', dataKey: 'amount', align: 'right' },
                   { header: 'Descripción', dataKey: 'description' },
                   { header: 'Estado', dataKey: 'status', align: 'center' },
-                  { header: 'Licitación', dataKey: 'tender_info' },
+                  ...(filterType === 'Approved' ? [{ header: 'Licitación', dataKey: 'tender_info' }] : []),
                   { header: 'Expediente', dataKey: 'file_number' },
                 ],
                 data: filteredBudgets.map((b: any) => ({
@@ -278,7 +278,7 @@ export default function BudgetsPage() {
               <th className="px-6 py-4">Fecha</th>
               <th className="px-6 py-4">Monto</th>
               <th className="px-6 py-4">Descripción</th>
-              <th className="px-6 py-4">Licitación</th>
+              {filterType === 'Approved' && <th className="px-6 py-4">Licitación</th>}
               <th className="px-6 py-4">Estado / Expediente</th>
               <th className="px-6 py-4 text-right">Acciones</th>
             </tr>
@@ -287,7 +287,7 @@ export default function BudgetsPage() {
             {loading ? (
               Array(5).fill(0).map((_, i) => (
                 <tr key={i} className="animate-pulse">
-                  <td className="px-6 py-6" colSpan={8}><div className="h-4 bg-slate-800 rounded w-full"></div></td>
+                  <td className="px-6 py-6" colSpan={filterType === 'Approved' ? 8 : 7}><div className="h-4 bg-slate-800 rounded w-full"></div></td>
                 </tr>
               ))
             ) : filteredBudgets.length > 0 ? (
@@ -314,16 +314,18 @@ export default function BudgetsPage() {
                         {(budget.description || '').replace(/^\[EMPRESA: .*?\]\n\n/, '') || '---'}
                     </div>
                   </td>
-                  <td className="px-6 py-4">
-                    {budget.tenders && budget.tenders.length > 0 ? (
-                      <div className="flex flex-col">
-                        <span className="text-[10px] font-black text-blue-400">#{budget.tenders[0].tender_number}</span>
-                        <span className="text-[9px] text-slate-500 font-bold uppercase">{formatDateLocal(budget.tenders[0].tender_date)}</span>
-                      </div>
-                    ) : (
-                      <span className="text-[10px] font-black text-rose-500 bg-rose-500/10 px-2 py-0.5 rounded-md border border-rose-500/20">FALTA</span>
-                    )}
-                  </td>
+                  {filterType === 'Approved' && (
+                    <td className="px-6 py-4">
+                      {budget.tenders && budget.tenders.length > 0 ? (
+                        <div className="flex flex-col">
+                          <span className="text-[10px] font-black text-blue-400">#{budget.tenders[0].tender_number}</span>
+                          <span className="text-[9px] text-slate-500 font-bold uppercase">{formatDateLocal(budget.tenders[0].tender_date)}</span>
+                        </div>
+                      ) : (
+                        <span className="text-[10px] font-black text-rose-500 bg-rose-500/10 px-2 py-0.5 rounded-md border border-rose-500/20">FALTA</span>
+                      )}
+                    </td>
+                  )}
                   <td className="px-6 py-4">
                     <div className="flex flex-col gap-1.5">
                         <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full w-fit font-black text-[9px] tracking-widest uppercase ${
@@ -357,7 +359,7 @@ export default function BudgetsPage() {
               ))
             ) : (
                 <tr>
-                    <td colSpan={8} className="py-20 text-center text-slate-600 font-black uppercase tracking-widest text-xs italic">
+                    <td colSpan={filterType === 'Approved' ? 8 : 7} className="py-20 text-center text-slate-600 font-black uppercase tracking-widest text-xs italic">
                         No se encontraron presupuestos.
                     </td>
                 </tr>
