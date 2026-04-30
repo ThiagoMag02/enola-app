@@ -55,7 +55,7 @@ export default function TendersPage() {
   };
 
   return (
-    <div className="p-8 space-y-8 animate-in zoom-in-95 duration-500">
+    <div className="p-8 h-screen flex flex-col space-y-8 animate-in zoom-in-95 duration-500 overflow-hidden">
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900/50 p-6 rounded-3xl border border-slate-800 shadow-xl">
         <div>
           <h2 className="text-3xl font-extrabold text-white flex items-center gap-3">
@@ -113,8 +113,8 @@ export default function TendersPage() {
         </div>
       </header>
 
-      <div className="bg-slate-900/40 rounded-3xl border border-slate-800 shadow-2xl relative min-h-[300px] overflow-hidden">
-        <div className="max-h-[600px] overflow-auto">
+      <div className="bg-slate-900/40 rounded-3xl border border-slate-800 shadow-2xl relative flex-1 overflow-hidden">
+        <div className="h-full overflow-auto">
           <table className="w-full text-left border-collapse">
             <thead className="bg-slate-800 sticky top-0 z-20 text-slate-400 text-[10px] uppercase tracking-widest font-black shadow-md">
             <tr>
