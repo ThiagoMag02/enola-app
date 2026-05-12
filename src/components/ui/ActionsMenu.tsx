@@ -8,9 +8,10 @@ interface ActionsMenuProps {
   onDelete: () => void;
   onApprove?: () => void;
   onReject?: () => void;
+  deleteLabel?: string;
 }
 
-export const ActionsMenu = ({ onEdit, onDelete, onApprove, onReject }: ActionsMenuProps) => {
+export const ActionsMenu = ({ onEdit, onDelete, onApprove, onReject, deleteLabel = 'Eliminar' }: ActionsMenuProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -88,7 +89,7 @@ export const ActionsMenu = ({ onEdit, onDelete, onApprove, onReject }: ActionsMe
               e.preventDefault();
               e.stopPropagation();
               console.log("ActionsMenu: Trash button clicked!");
-              if (window.confirm('¿Estás seguro de que deseas eliminar este registro?')) {
+              if (window.confirm(`¿Estás seguro de que deseas ${deleteLabel.toLowerCase()} este registro?`)) {
                 console.log("ActionsMenu: User confirmed, calling onDelete()");
                 onDelete();
               } else {
@@ -98,7 +99,7 @@ export const ActionsMenu = ({ onEdit, onDelete, onApprove, onReject }: ActionsMe
             }}
             className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-500 transition-colors"
           >
-            <Trash2 size={16} /> Eliminar
+            <Trash2 size={16} /> {deleteLabel}
           </button>
         </div>
       )}

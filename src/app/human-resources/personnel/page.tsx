@@ -18,9 +18,13 @@ import {
 import { employeeService, Employee } from '@/services/employeeService';
 import { companyService, Company } from '@/services/companyService';
 import { costCenterService, CostCenter } from '@/services/costCenterService';
+import { cn, formatDateLocal } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext'; // If needed, but let's check existing imports
 import { Modal } from '@/components/ui/Modal';
 import { EmployeeForm } from '@/components/forms/EmployeeForm';
 import { ActionsMenu } from '@/components/ui/ActionsMenu';
+
+import { DeactivationForm } from '@/components/forms/DeactivationForm';
 
 export default function PersonnelPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -36,7 +40,9 @@ export default function PersonnelPage() {
   const [selectedCostCenter, setSelectedCostCenter] = useState('');
   
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeactivateModalOpen, setIsDeactivateModalOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+  const [deactivatingEmployee, setDeactivatingEmployee] = useState<Employee | null>(null);
 
   const loadData = async () => {
     setLoading(true);
@@ -60,12 +66,13 @@ export default function PersonnelPage() {
     loadData();
   }, []);
 
-  const handleDeactivate = async (id: string) => {
-    const reason = prompt('Por favor, ingrese el motivo de la baja:');
-    if (!reason) return;
+  const handleDeactivate = async (reason: string, date: string) => {
+    if (!deactivatingEmployee) return;
 
     try {
-      await employeeService.deactivateEmployee(id, reason);
+      await employeeService.deactivateEmployee(deactivatingEmployee.id, reason, date);
+      setIsDeactivateModalOpen(false);
+      setDeactivatingEmployee(null);
       loadData();
     } catch (err) {
       console.error('Error deactivating employee:', err);
@@ -79,6 +86,45 @@ export default function PersonnelPage() {
     setDateTo('');
     setSelectedCompany('');
     setSelectedCostCenter('');
+  };
+
+  const translateStatus = (status: string) => {
+    const map: Record<string, string> = {
+      'ACTIVE': 'ACTIVO',
+      'INACTIVE': 'INACTIVO',
+      'WORKING': 'TRABAJANDO',
+      'ON_LEAVE': 'LICENCIA',
+      'SUSPENDED': 'SUSPENDIDO',
+      'VACATION': 'VACACIONES'
+    };
+    return map[status] || status;
+  };
+
+  const calculateSeniority = (hireDate: string | null | undefined) => {
+    if (!hireDate) return '---';
+    const start = new Date(hireDate);
+    const end = new Date();
+    
+    let years = end.getFullYear() - start.getFullYear();
+    let months = end.getMonth() - start.getMonth();
+    let days = end.getDate() - start.getDate();
+
+    if (days < 0) {
+      months--;
+      const lastMonth = new Date(end.getFullYear(), end.getMonth(), 0);
+      days += lastMonth.getDate();
+    }
+    if (months < 0) {
+      years--;
+      months += 12;
+    }
+
+    const parts = [];
+    if (years > 0) parts.push(`${years} ${years === 1 ? 'año' : 'años'}`);
+    if (months > 0) parts.push(`${months} ${months === 1 ? 'mes' : 'meses'}`);
+    if (days > 0) parts.push(`${days} ${days === 1 ? 'día' : 'días'}`);
+
+    return parts.length > 0 ? parts.join(', ') : '0 días';
   };
 
   const filteredEmployees = employees.filter(e => {
@@ -280,17 +326,17 @@ export default function PersonnelPage() {
                     <td className="px-6 py-4">
                       <div className="flex flex-col">
                         <span className="text-xs font-bold text-slate-300">{person.license_card || 'N/A'}</span>
-                        <span className="text-[9px] text-amber-400 font-bold">Vence: {person.license_card_expiration || '---'}</span>
+                        <span className="text-[9px] text-amber-400 font-bold">Vence: {formatDateLocal(person.license_card_expiration)}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-col">
                         <span className="text-xs font-bold text-slate-300 flex items-center gap-1">
                           <Calendar size={12} className="text-slate-500" />
-                          Ingreso: {person.hire_date || '---'}
+                          Ingreso: {formatDateLocal(person.hire_date)}
                         </span>
                         <span className="text-[9px] text-slate-500 font-black uppercase tracking-tighter">
-                          {person.seniority || '---'}
+                          Antigüedad: {calculateSeniority(person.hire_date)}
                         </span>
                       </div>
                     </td>
@@ -301,10 +347,10 @@ export default function PersonnelPage() {
                             ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' 
                             : 'text-rose-400 bg-rose-500/10 border-rose-500/20'
                         }`}>
-                          {person.status}
+                          {translateStatus(person.status)}
                         </span>
                         <span className="text-[9px] text-slate-500 font-bold uppercase tracking-tight">
-                          {person.employment_status}
+                          {translateStatus(person.employment_status)}
                         </span>
                         {person.status === 'INACTIVE' && (
                           <span className="text-[9px] text-rose-500/70 italic max-w-[120px] truncate" title={person.termination_reason || ''}>
@@ -319,7 +365,11 @@ export default function PersonnelPage() {
                           setEditingEmployee(person);
                           setIsModalOpen(true);
                         }}
-                        onDelete={() => handleDeactivate(person.id)}
+                        onDelete={() => {
+                          setDeactivatingEmployee(person);
+                          setIsDeactivateModalOpen(true);
+                        }}
+                        deleteLabel="Dar de baja"
                       />
                     </td>
                   </tr>
@@ -356,6 +406,26 @@ export default function PersonnelPage() {
             setEditingEmployee(null);
           }}
         />
+      </Modal>
+
+      <Modal
+        isOpen={isDeactivateModalOpen}
+        onClose={() => {
+          setIsDeactivateModalOpen(false);
+          setDeactivatingEmployee(null);
+        }}
+        title="Procesar Baja de Empleado"
+      >
+        {deactivatingEmployee && (
+          <DeactivationForm
+            employeeName={`${deactivatingEmployee.first_name} ${deactivatingEmployee.last_name}`}
+            onConfirm={handleDeactivate}
+            onCancel={() => {
+              setIsDeactivateModalOpen(false);
+              setDeactivatingEmployee(null);
+            }}
+          />
+        )}
       </Modal>
     </div>
   );

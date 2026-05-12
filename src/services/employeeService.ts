@@ -5,29 +5,29 @@ export type EmploymentStatus = 'WORKING' | 'ON_LEAVE' | 'SUSPENDED' | 'VACATION'
 
 export interface Employee {
   id: string;
-  employee_code?: string;
-  cost_center_id?: string;
+  employee_code?: string | null;
+  cost_center_id?: string | null;
   first_name: string;
   last_name: string;
   cuil: string; // Required for business logic
-  street?: string;
-  city?: string;
-  postal_code?: string;
-  phone?: string;
-  cbu?: string;
-  bank?: string;
-  agreement?: string;
-  category?: string;
-  license_card?: string;
-  license_card_expiration?: string;
-  hire_date?: string;
-  seniority?: string;
+  street?: string | null;
+  city?: string | null;
+  postal_code?: string | null;
+  phone?: string | null;
+  cbu?: string | null;
+  bank?: string | null;
+  agreement?: string | null;
+  category?: string | null;
+  license_card?: string | null;
+  license_card_expiration?: string | null;
+  hire_date?: string | null;
+  seniority?: string | null;
   termination_date?: string | null;
   termination_reason?: string | null;
   status: EmployeeStatus;
   employment_status: EmploymentStatus;
   created_at: string;
-  updated_at?: string;
+  updated_at?: string | null;
   cost_center?: any;
 }
 
@@ -159,15 +159,18 @@ export const employeeService = {
     return data;
   },
 
-  async deactivateEmployee(id: string, reason: string) {
+  async deactivateEmployee(id: string, reason: string, date?: string) {
     if (!reason) throw new Error("El motivo de baja es obligatorio");
+
+    const terminationDate = date || new Date().toISOString().split('T')[0];
 
     const { data, error } = await supabase
       .from('employees')
       .update({ 
         status: 'INACTIVE', 
+        employment_status: 'SUSPENDED', // Defaulting to suspended on deactivation
         termination_reason: reason, 
-        termination_date: new Date().toISOString().split('T')[0],
+        termination_date: terminationDate,
         updated_at: new Date().toISOString() 
       })
       .eq('id', id)

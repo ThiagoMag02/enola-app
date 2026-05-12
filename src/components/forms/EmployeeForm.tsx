@@ -101,11 +101,31 @@ export const EmployeeForm = ({ initialData, onSuccess, onCancel }: EmployeeFormP
       return;
     }
     setLoading(true);
+
+    // Helper to convert empty strings to null for optional fields
+    const sanitize = (val: any) => (val === "" ? null : val);
+
+    const sanitizedData: Partial<Employee> = {
+      ...formData,
+      street: sanitize(formData.street),
+      city: sanitize(formData.city),
+      postal_code: sanitize(formData.postal_code),
+      phone: sanitize(formData.phone),
+      cbu: sanitize(formData.cbu),
+      bank: sanitize(formData.bank),
+      agreement: sanitize(formData.agreement),
+      category: sanitize(formData.category),
+      license_card: sanitize(formData.license_card),
+      license_card_expiration: sanitize(formData.license_card_expiration),
+      hire_date: sanitize(formData.hire_date),
+      seniority: sanitize(formData.seniority),
+    };
+
     try {
       if (initialData?.id) {
-        await employeeService.update(initialData.id, formData);
+        await employeeService.update(initialData.id, sanitizedData);
       } else {
-        await employeeService.createOrReactivateEmployee(formData);
+        await employeeService.createOrReactivateEmployee(sanitizedData);
       }
       onSuccess();
     } catch (error: any) {
@@ -277,6 +297,32 @@ export const EmployeeForm = ({ initialData, onSuccess, onCancel }: EmployeeFormP
               placeholder="Ej: Oficial"
               value={formData.category || ''}
               onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className={labelClass}>Nro. de Carnet</label>
+          <div className="relative">
+            <Hash className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+            <input
+              className={inputClass}
+              placeholder="Ej: 12345678"
+              value={formData.license_card || ''}
+              onChange={(e) => setFormData({ ...formData, license_card: e.target.value })}
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className={labelClass}>Vencimiento Carnet</label>
+          <div className="relative">
+            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+            <input
+              type="date"
+              className={inputClass}
+              value={formData.license_card_expiration || ''}
+              onChange={(e) => setFormData({ ...formData, license_card_expiration: e.target.value })}
             />
           </div>
         </div>
