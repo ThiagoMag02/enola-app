@@ -27,6 +27,7 @@ export const InvoiceForm = ({ initialData, onSuccess, onCancel }: InvoiceFormPro
     amount: initialData?.amount || 0,
     status: initialData?.status || 'Pending',
     date: initialData?.date?.split('T')[0] || getCurrentDate(),
+    description: initialData?.description || '',
   });
 
   useEffect(() => {
@@ -155,6 +156,20 @@ export const InvoiceForm = ({ initialData, onSuccess, onCancel }: InvoiceFormPro
               placeholder="0.00"
               value={formData.amount || ''}
               onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) })}
+            />
+          </div>
+        </div>
+
+        {/* Descripción */}
+        <div className="md:col-span-2">
+          <label className={labelClass}>Descripción / Concepto</label>
+          <div className="relative">
+            <FileText className="absolute left-4 top-4 text-slate-500" size={18} />
+            <textarea
+              className={`${inputClass} min-h-[100px] pt-4 resize-none`}
+              placeholder="Describa brevemente el concepto de la factura (ej: Primer pago, materiales eléctricos, etc.)"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             />
           </div>
         </div>

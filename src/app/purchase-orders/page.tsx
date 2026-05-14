@@ -79,7 +79,7 @@ export default function PurchaseOrdersPage() {
                     tender_info: po.tender ? `LIC: ${po.tender.tender_number}` : 'DIRECTA',
                     description: desc.replace(/^\[EMPRESA: .*?\]\n\n/, '').slice(0, 80) || '---',
                     amount: fmtCurrency(po.amount),
-                    status: fmtStatus(po.status, statusMap),
+                    status: `${fmtStatus(po.status, statusMap)} (${po.amount > 0 ? Math.round((po.invoices?.reduce((sum: number, inv: any) => sum + (inv.amount || 0), 0) || 0) / po.amount * 100) : 0}% Fact.)`,
                   };
                 }),
               });
@@ -124,6 +124,8 @@ export default function PurchaseOrdersPage() {
             ) : pos.length > 0 ? (
               pos.map((po) => {
                 const description = po.tender?.budget?.description || po.approval?.budget?.description || '';
+                const totalInvoiced = po.invoices?.reduce((sum: number, inv: any) => sum + (inv.amount || 0), 0) || 0;
+                const percentInvoiced = po.amount > 0 ? Math.round((totalInvoiced / po.amount) * 100) : 0;
                 
                 return (
                   <tr key={po.id} className="hover:bg-slate-800/30 transition-colors group">
@@ -153,15 +155,31 @@ export default function PurchaseOrdersPage() {
                       ${new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(po.amount)}
                     </td>
                     <td className="px-6 py-4">
-                      <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full w-fit ${
-                        po.status === 'Billed' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 
-                        po.status === 'Partial' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 
-                        'bg-slate-700/30 text-slate-400 border border-slate-700/50'
-                      }`}>
-                        {po.status === 'Billed' ? <CheckCircle2 size={12} /> : 
-                        po.status === 'Partial' ? <Clock size={12} /> : 
-                        <AlertCircle size={12} />}
-                        {po.status === 'Billed' ? 'Completado' : po.status === 'Partial' ? 'Parcial' : 'Pendiente'}
+                      <div className="flex flex-col gap-2">
+                        <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full w-fit ${
+                          percentInvoiced >= 100 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 
+                          percentInvoiced > 0 ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 
+                          'bg-slate-700/30 text-slate-400 border border-slate-700/50'
+                        }`}>
+                          {percentInvoiced >= 100 ? <CheckCircle2 size={12} /> : 
+                          percentInvoiced > 0 ? <Clock size={12} /> : 
+                          <AlertCircle size={12} />}
+                          {percentInvoiced >= 100 ? 'Completado' : percentInvoiced > 0 ? 'Parcial' : 'Pendiente'}
+                        </div>
+                        <div className="flex items-center gap-2 px-1">
+                          <div className="flex-1 h-1 bg-slate-800 rounded-full overflow-hidden min-w-[60px]">
+                            <div 
+                              className={`h-full transition-all duration-1000 ${
+                                percentInvoiced >= 100 ? 'bg-emerald-500' : 
+                                percentInvoiced > 0 ? 'bg-blue-500' : 'bg-slate-700'
+                              }`}
+                              style={{ width: `${Math.min(percentInvoiced, 100)}%` }}
+                            />
+                          </div>
+                          <span className="text-[9px] font-black text-slate-400 whitespace-nowrap uppercase tracking-tighter">
+                            {percentInvoiced}% Facturado
+                          </span>
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right">

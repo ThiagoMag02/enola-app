@@ -82,6 +82,7 @@ export default function InvoicesPage() {
                 columns: [
                   { header: 'N° Factura', dataKey: 'invoice_number' },
                   { header: 'Fecha', dataKey: 'date' },
+                  { header: 'Descripción', dataKey: 'description' },
                   { header: 'OC Relacionada', dataKey: 'po_info' },
                   { header: 'Importe', dataKey: 'amount', align: 'right' },
                   { header: 'Pagado', dataKey: 'paid', align: 'right' },
@@ -95,6 +96,7 @@ export default function InvoicesPage() {
                   return {
                     invoice_number: inv.invoice_number,
                     date: fmtDate(inv.date),
+                    description: inv.description || '---',
                     po_info: inv.purchase_order ? `OC: ${inv.purchase_order.po_number}` : 'DIRECTA',
                     amount: fmtCurrency(inv.amount),
                     paid: fmtCurrency(paid),
@@ -149,11 +151,12 @@ export default function InvoicesPage() {
                   </div>
                 </div>
 
-                <div className="bg-slate-900/40 rounded-3xl border border-slate-800 shadow-2xl overflow-hidden">
+                <div className="bg-slate-900/40 rounded-3xl border border-slate-800 shadow-2xl overflow-visible">
                   <table className="w-full text-left border-collapse">
                     <thead className="bg-slate-800/50 text-slate-500 text-[10px] uppercase tracking-widest font-black">
                       <tr>
                         <th className="px-6 py-4">N° Factura / Fecha</th>
+                        <th className="px-6 py-4">Descripción</th>
                         <th className="px-6 py-4">Importe Factura</th>
                         <th className="px-6 py-4">Pagado</th>
                         <th className="px-6 py-4">Pendiente de Pago</th>
@@ -172,6 +175,11 @@ export default function InvoicesPage() {
                               <div className="text-sm font-black text-white group-hover:text-indigo-400 transition-colors">{inv.invoice_number}</div>
                               <div className="text-[10px] text-slate-500 mt-0.5 font-bold">{formatDateLocal(inv.date)}</div>
                             </td>
+                            <td className="px-6 py-4">
+                              <div className="text-[10px] text-slate-400 font-medium max-w-[250px] truncate" title={inv.description}>
+                                {inv.description || '---'}
+                              </div>
+                            </td>
                             <td className="px-6 py-4 font-mono text-xs text-slate-400">
                               {formatCurrency(inv.amount)}
                             </td>
@@ -181,7 +189,7 @@ export default function InvoicesPage() {
                             <td className="px-6 py-4">
                               <div className={`flex items-center gap-2 px-3 py-1 rounded-full w-fit font-black text-[10px] ${isPaid ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'}`}>
                                 {isPaid ? <CheckCircle2 size={12} /> : <AlertCircle size={12} />}
-                                {isPaid ? 'LIQUIDADA' : formatCurrency(remaining)}
+                                {isPaid ? 'CANCELADA' : formatCurrency(remaining)}
                               </div>
                             </td>
                             <td className="px-6 py-4 text-right">

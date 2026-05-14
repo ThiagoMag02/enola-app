@@ -8,12 +8,8 @@ import { ActionsMenu } from '@/components/ui/ActionsMenu';
 import { formatDateLocal } from '@/lib/utils';
 import { 
   CreditCard, 
-  Search, 
   Plus, 
-  TrendingDown,
   FileText,
-  CheckCircle2,
-  Calendar,
   FileDown
 } from 'lucide-react';
 import { exportToPdf, fmtCurrency, fmtDate } from '@/lib/pdfExport';
@@ -45,6 +41,10 @@ export default function PaymentsPage() {
     loadPayments();
   }, []);
 
+  const formatCurrency = (amount: number) => {
+    return `$${new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount)}`;
+  };
+
   return (
     <div className="p-8 space-y-8 animate-in fade-in duration-700">
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900/50 p-6 rounded-3xl border border-slate-800 shadow-xl">
@@ -63,15 +63,17 @@ export default function PaymentsPage() {
                 fileName: `pagos_${new Date().toISOString().split('T')[0]}`,
                 columns: [
                   { header: 'Fecha', dataKey: 'date' },
+                  { header: 'Factura', dataKey: 'invoice_ref' },
+                  { header: 'OC', dataKey: 'po_ref' },
                   { header: 'Método', dataKey: 'method' },
                   { header: 'Importe', dataKey: 'amount', align: 'right' },
-                  { header: 'Factura Ref', dataKey: 'invoice_ref' },
                 ],
                 data: payments.map((p: any) => ({
                   date: fmtDate(p.date),
+                  invoice_ref: p.invoice?.invoice_number || '---',
+                  po_ref: p.invoice?.purchase_order?.po_number || '---',
                   method: p.method,
                   amount: fmtCurrency(p.amount),
-                  invoice_ref: p.invoice_id?.slice(0, 8) || '---',
                 })),
               });
             }}
@@ -92,54 +94,72 @@ export default function PaymentsPage() {
         </div>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {loading ? (
-             Array(3).fill(0).map((_, i) => (
-                <div key={i} className="h-40 bg-slate-900/40 rounded-3xl animate-pulse"></div>
-             ))
-        ) : payments.length > 0 ? (
-          payments.map((p) => (
-            <div key={p.id} className="group bg-slate-900 border border-slate-800 rounded-3xl p-6 hover:border-purple-500/50 transition-all shadow-xl hover:-translate-y-1">
-              <div className="flex justify-between items-start mb-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-purple-600/10 flex items-center justify-center text-purple-400 group-hover:bg-purple-600 group-hover:text-white transition-all transform group-hover:rotate-12">
-                     <TrendingDown size={24} />
-                  </div>
-                  <ActionsMenu 
-                    onEdit={() => {
-                      setEditingPayment(p);
-                      setIsModalOpen(true);
-                    }}
-                    onDelete={() => handleDelete(p.id)}
-                  />
-                </div>
-                <div className="text-right">
-                  <p className="text-2xl font-black text-white">$ {new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(p.amount)}</p>
-                  <div className="flex items-center gap-1.5 justify-end text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">
-                   <Calendar size={12} /> {formatDateLocal(p.date)}
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-slate-950/60 p-4 rounded-2xl border border-slate-800/50 mb-4 group-hover:bg-slate-950 transition-colors">
-                <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-1">Método de Pago</p>
-                <p className="text-sm font-bold text-slate-200">{p.method}</p>
-              </div>
-
-              <div className="flex items-center gap-3 text-xs text-slate-400 group-hover:text-purple-300 transition-colors">
-                 <FileText size={14} className="opacity-50" />
-                 Factura Ref: <span className="font-mono text-slate-500 group-hover:text-purple-400">{p.invoice_id?.slice(0,8) || '---'}</span>
-                 <CheckCircle2 size={14} className="ml-auto text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity" />
-              </div>
-            </div>
-          ))
-        ) : (
-          <div className="col-span-full py-20 bg-slate-900/20 border border-dashed border-slate-800 rounded-3xl flex flex-col items-center justify-center text-slate-600">
-             <CreditCard size={40} className="mb-4 opacity-5" />
-             <p className="font-black uppercase tracking-tighter text-sm">Sin transacciones registradas hasta hoy.</p>
-          </div>
-        )}
-      </div>
+      <div className="bg-slate-900/40 rounded-3xl border border-slate-800 shadow-2xl relative min-h-[300px] overflow-hidden">
+        <div className="max-h-[600px] overflow-auto">
+          <table className="w-full text-left border-collapse">
+            <thead className="bg-slate-800 sticky top-0 z-20 text-slate-400 text-[10px] uppercase tracking-widest font-black shadow-md">
+            <tr>
+              <th className="px-6 py-4">Fecha</th>
+              <th className="px-6 py-4">Factura Asociada</th>
+              <th className="px-6 py-4">OC Relacionada</th>
+              <th className="px-6 py-4">Método de Pago</th>
+              <th className="px-6 py-4">Importe</th>
+              <th className="px-6 py-4 text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-800">
+            {loading ? (
+              Array(3).fill(0).map((_, i) => (
+                <tr key={i} className="animate-pulse">
+                  <td className="px-6 py-6" colSpan={6}><div className="h-4 bg-slate-800 rounded w-full"></div></td>
+                </tr>
+              ))
+            ) : payments.length > 0 ? (
+              payments.map((p) => (
+                <tr key={p.id} className="hover:bg-slate-800/30 transition-colors group">
+                  <td className="px-6 py-4">
+                    <div className="text-sm font-black text-white group-hover:text-purple-400 transition-colors">
+                      {formatDateLocal(p.date, { day: '2-digit', month: 'short', year: 'numeric' })}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2">
+                      <FileText size={14} className="text-slate-500" />
+                      <span className="text-xs font-bold text-slate-300">
+                        {p.invoice?.invoice_number || '---'}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="text-xs font-bold text-purple-400">
+                      {p.invoice?.purchase_order?.po_number || '---'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full w-fit bg-slate-700/30 text-slate-400 border border-slate-700/50">
+                      {p.method}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 font-mono font-bold text-white text-sm">
+                    {formatCurrency(p.amount)}
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <ActionsMenu 
+                      onEdit={() => {
+                        setEditingPayment(p);
+                        setIsModalOpen(true);
+                      }}
+                      onDelete={() => handleDelete(p.id)}
+                    />
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr><td colSpan={6} className="py-20 text-center text-slate-600 font-black uppercase tracking-widest text-xs italic">Sin transacciones registradas hasta hoy.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div></div>
 
       <Modal 
         isOpen={isModalOpen} 

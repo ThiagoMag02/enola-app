@@ -9,6 +9,7 @@ export interface Invoice {
   amount: number;
   date: string;
   status: InvoiceStatus;
+  description?: string;
   created_at: string;
   purchase_order?: any;
 }
@@ -41,7 +42,7 @@ export const invoiceService = {
     return data;
   },
 
-  async create(invoice: { purchase_order_id: string; invoice_number: string; amount: number; date?: string; status?: InvoiceStatus }) {
+  async create(invoice: { purchase_order_id: string; invoice_number: string; amount: number; date?: string; status?: InvoiceStatus; description?: string }) {
     const { data, error } = await supabase
       .from('invoices')
       .insert([{ ...invoice, date: invoice.date || new Date().toISOString(), status: invoice.status || 'Pending' }])

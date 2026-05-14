@@ -13,6 +13,7 @@ export interface PurchaseOrder {
   created_at: string;
   tender?: any;
   approval?: any;
+  invoices?: { amount: number }[];
 }
 
 export const purchaseOrderService = {

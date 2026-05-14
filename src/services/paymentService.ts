@@ -13,7 +13,10 @@ export const paymentService = {
   async getAll() {
     const { data, error } = await supabase
       .from('payments')
-      .select('*')
+      .select(`
+        *,
+        invoice:invoices(invoice_number, purchase_order:purchase_orders(po_number))
+      `)
       .order('date', { ascending: false });
     if (error) throw error;
     return data;
